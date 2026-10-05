@@ -1,0 +1,489 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; -webkit-user-select: none; }
+  svg { width: 100%; height: 100%; display: block; }
+  .zz { font: 700 13px -apple-system, "SF Pro Rounded", sans-serif; fill: #8b7bd8; }
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<script>
+// ---------------------------------------------------------------------------
+// Characters. Every character uses the same element ids so the shared engine
+// can drive it: root, head, face, eyesOpen/eyeL/eyeR (data-x/data-y = centre),
+// eyesHappy, eyesSleep, eyesWow, m_smile, m_grin, m_o, blushL, blushR.
+// `update` animates anything character-specific (tails, flames, ears...).
+// ---------------------------------------------------------------------------
+const CHARS = {};
+
+// ---------- Bolt: hovering robot ----------
+CHARS.bot = {
+  face: { x: 100, y: 93 }, faceShift: [12, 8], turn: 5, pivot: [100, 140],
+  motion: 'fly', tiltPivot: 120, base: 200, zAt: [150, 50], heartY: 60, shadow: 'glow',
+  defs: `
+    <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#e3e9f4"/><stop offset="1" stop-color="#b8c3d9"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9b4ca"/><stop offset="1" stop-color="#76829c"/></linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2a4d"/><stop offset="1" stop-color="#0a0f22"/></linearGradient>
+    <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9fdff"/><stop offset=".35" stop-color="#5ef2ff"/><stop offset="1" stop-color="#4a7dff" stop-opacity="0"/></linearGradient>
+    <clipPath id="screenClip"><rect x="52" y="58" width="96" height="70" rx="24"/></clipPath>`,
+  body: `
+    <g id="flameG"><path d="M90,204 Q100,236 110,204 Z" fill="url(#flame)" filter="url(#glow)"/></g>
+    <rect x="87" y="196" width="26" height="9" rx="4.5" fill="url(#metal)"/>
+    <g id="handL"><circle cx="52" cy="172" r="10" fill="url(#shell)" stroke="#aab5cb"/></g>
+    <g id="handR"><circle cx="148" cy="172" r="10" fill="url(#shell)" stroke="#aab5cb"/></g>
+    <rect x="66" y="146" width="68" height="54" rx="25" fill="url(#shell)" stroke="#aab5cb"/>
+    <path d="M76,156 Q86,150 98,150" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="100" cy="174" r="10" fill="url(#screen)"/>
+    <path id="core" d="M100,179 C93,174 95,167 100,170.5 C105,167 107,174 100,179 Z" fill="#ff6b8b" filter="url(#glow)"/>
+    <g id="head">
+      <rect x="90" y="136" width="20" height="12" rx="4" fill="url(#metal)"/>
+      <g id="antenna">
+        <path d="M100,40 L100,18" stroke="#8f9ab2" stroke-width="3.5" stroke-linecap="round"/>
+        <circle id="bulb" cx="100" cy="14" r="6.5" fill="#ff6b8b" filter="url(#glow)"/>
+        <circle cx="98" cy="12" r="2" fill="#fff" opacity=".8"/>
+      </g>
+      <rect x="28" y="70" width="18" height="44" rx="9" fill="url(#metal)"/>
+      <rect x="154" y="70" width="18" height="44" rx="9" fill="url(#metal)"/>
+      <circle cx="37" cy="92" r="4" fill="#5ef2ff" filter="url(#glow)"/>
+      <circle cx="163" cy="92" r="4" fill="#5ef2ff" filter="url(#glow)"/>
+      <rect x="40" y="38" width="120" height="104" rx="38" fill="url(#shell)" stroke="#aab5cb"/>
+      <path d="M58,52 Q72,43 92,43" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+      <g id="screenG">
+        <rect x="52" y="58" width="96" height="70" rx="24" fill="url(#screen)"/>
+        <g clip-path="url(#screenClip)">
+          <g id="face">
+            <ellipse id="blushL" cx="68" cy="108" rx="7" ry="3.5" fill="#ff6b8b"/>
+            <ellipse id="blushR" cx="132" cy="108" rx="7" ry="3.5" fill="#ff6b8b"/>
+            <g fill="#5ef2ff" stroke="#5ef2ff" filter="url(#glow)">
+              <g id="eyesOpen">
+                <g id="eyeL" data-x="80" data-y="90"><rect x="-8" y="-11" width="16" height="22" rx="8" stroke="none"/><circle cx="-3" cy="-5" r="2.2" fill="#fff" stroke="none"/></g>
+                <g id="eyeR" data-x="120" data-y="90"><rect x="-8" y="-11" width="16" height="22" rx="8" stroke="none"/><circle cx="-3" cy="-5" r="2.2" fill="#fff" stroke="none"/></g>
+              </g>
+              <g id="eyesHappy" fill="none" stroke-width="3.5" stroke-linecap="round"><path d="M71,93 Q80,81 89,93"/><path d="M111,93 Q120,81 129,93"/></g>
+              <g id="eyesSleep" fill="none" stroke-width="3" stroke-linecap="round"><path d="M72,91 Q80,96 88,91"/><path d="M112,91 Q120,96 128,91"/></g>
+              <g id="eyesWow" fill="none" stroke-width="3"><circle cx="80" cy="90" r="8"/><circle cx="120" cy="90" r="8"/></g>
+              <g id="m_smile" fill="none" stroke-width="3" stroke-linecap="round"><path d="M92,108 Q100,114 108,108"/></g>
+              <g id="m_grin" stroke="none"><path d="M90,106 H110 Q108,117 100,117 Q92,117 90,106 Z"/></g>
+              <g id="m_o" fill="none" stroke-width="2.5"><circle cx="100" cy="111" r="4"/></g>
+            </g>
+          </g>
+          <path d="M60,128 L96,58 H118 L82,128 Z" fill="#fff" opacity=".05"/>
+        </g>
+      </g>
+    </g>`,
+  update(t, S) {
+    attr('screenG', 'transform', `translate(${S.cx * 2.5},${S.cy * 2})`);
+    attr('antenna', 'transform', `rotate(${Math.sin(t / 520) * 4 - S.svx * 2.2 - S.cx * 6},100,40)`);
+    attr('bulb', 'opacity', S.sleeping ? .3 : .7 + .3 * Math.sin(t / 380));
+    attr('core', 'transform', `translate(100,174) scale(${.9 + .12 * Math.sin(t / 300)}) translate(-100,-174)`);
+    const w = Math.abs(S.wave);
+    attr('handL', 'transform', `translate(${-S.svx * .6},${Math.sin(t / 600) * 2.5 + S.svy * .5 - w})`);
+    attr('handR', 'transform', `translate(${-S.svx * .6},${Math.sin(t / 600 + 1.6) * 2.5 + S.svy * .5 - w})`);
+    const len = (S.sleeping ? .45 : .7) + Math.min(S.speed / 10, 1) * .8 + Math.random() * .12;
+    attr('flameG', 'transform', `translate(100,204) scale(${.85 + Math.random() * .1},${len}) translate(-100,-204)`);
+  }
+};
+
+// ---------- Mochi: ginger cat ----------
+CHARS.cat = {
+  face: { x: 100, y: 122 }, faceShift: [8, 5], turn: 6, pivot: [100, 170],
+  motion: 'hop', tiltPivot: 200, base: 228, zAt: [150, 62], heartY: 60, shadow: 'dark',
+  defs: `
+    <radialGradient id="fur" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#fffaf3"/><stop offset="1" stop-color="#ffe3c8"/></radialGradient>
+    <linearGradient id="ginger" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb46b"/><stop offset="1" stop-color="#ef8636"/></linearGradient>`,
+  body: `
+    <g id="tail"><path d="M136,206 C172,206 182,168 168,146 C162,136 150,142 156,153 C166,170 160,190 134,192 Z" fill="url(#ginger)"/></g>
+    <ellipse cx="100" cy="194" rx="44" ry="33" fill="url(#fur)"/>
+    <ellipse cx="100" cy="200" rx="25" ry="19" fill="#fffdf9"/>
+    <ellipse cx="80" cy="222" rx="13" ry="8" fill="#fff6ec"/><ellipse cx="120" cy="222" rx="13" ry="8" fill="#fff6ec"/>
+    <path d="M76,224 v-4 M80,225 v-4 M84,224 v-4 M116,224 v-4 M120,225 v-4 M124,224 v-4" stroke="#e8c9a8" stroke-width="1.3" stroke-linecap="round"/>
+    <g id="head">
+      <g id="earL"><path d="M44,106 Q38,56 56,42 Q66,38 94,70 Z" fill="url(#ginger)"/><path d="M53,94 Q50,64 58,56 Q64,54 80,72 Z" fill="#ffb3c1"/></g>
+      <g id="earR"><path d="M156,106 Q162,56 144,42 Q134,38 106,70 Z" fill="url(#ginger)"/><path d="M147,94 Q150,64 142,56 Q136,54 120,72 Z" fill="#ffb3c1"/></g>
+      <ellipse cx="100" cy="122" rx="64" ry="52" fill="url(#fur)"/>
+      <path d="M90,73 L93,86 M100,71 V87 M110,73 L107,86" stroke="#ef8636" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M38,118 l10,2 M37,126 l10,0" stroke="#ef8636" stroke-width="3" stroke-linecap="round"/>
+      <path d="M162,118 l-10,2 M163,126 l-10,0" stroke="#ef8636" stroke-width="3" stroke-linecap="round"/>
+      <g id="face">
+        <ellipse id="blushL" cx="68" cy="140" rx="11" ry="5.5" fill="#ff8fa6"/>
+        <ellipse id="blushR" cx="132" cy="140" rx="11" ry="5.5" fill="#ff8fa6"/>
+        <g id="eyesOpen">
+          <g id="eyeL" data-x="77" data-y="122"><ellipse rx="9" ry="11" fill="#2a1d1a"/><circle cx="-3" cy="-4" r="3.6" fill="#fff"/><circle cx="3.2" cy="4" r="1.6" fill="#fff"/></g>
+          <g id="eyeR" data-x="123" data-y="122"><ellipse rx="9" ry="11" fill="#2a1d1a"/><circle cx="-3" cy="-4" r="3.6" fill="#fff"/><circle cx="3.2" cy="4" r="1.6" fill="#fff"/></g>
+        </g>
+        <g id="eyesHappy" fill="none" stroke="#2a1d1a" stroke-width="3.5" stroke-linecap="round"><path d="M68,125 Q77,113 86,125"/><path d="M114,125 Q123,113 132,125"/></g>
+        <g id="eyesSleep" fill="none" stroke="#2a1d1a" stroke-width="3" stroke-linecap="round"><path d="M69,122 Q77,128 85,122"/><path d="M115,122 Q123,128 131,122"/></g>
+        <g id="eyesWow"><circle cx="77" cy="122" r="11" fill="#2a1d1a"/><circle cx="123" cy="122" r="11" fill="#2a1d1a"/><circle cx="74" cy="118" r="4.5" fill="#fff"/><circle cx="120" cy="118" r="4.5" fill="#fff"/></g>
+        <path d="M95.5,133 H104.5 Q104,136 100,139 Q96,136 95.5,133 Z" fill="#ff8fa3"/>
+        <g id="m_smile"><path d="M90,141 Q95,146 100,140 Q105,146 110,141" fill="none" stroke="#6b3b2e" stroke-width="1.8" stroke-linecap="round"/></g>
+        <g id="m_grin"><path d="M91,141 Q100,141 109,141 Q107,152 100,152 Q93,152 91,141 Z" fill="#c2405a"/><path d="M95,148 Q100,145 105,148 Q100,152 95,148 Z" fill="#ff9fb2"/></g>
+        <g id="m_o"><ellipse cx="100" cy="145" rx="3.5" ry="4.5" fill="#c2405a"/></g>
+        <path d="M52,134 L30,130 M52,140 L30,143 M148,134 L170,130 M148,140 L170,143" stroke="#d9b796" stroke-width="1.4" stroke-linecap="round"/>
+      </g>
+    </g>
+    <path d="M70,168 Q100,184 130,168" fill="none" stroke="#ff5c7a" stroke-width="5" stroke-linecap="round"/>
+    <g id="bell"><circle cx="100" cy="180" r="6" fill="#ffd34d" stroke="#e0a91f"/><path d="M96,181 H104" stroke="#a87b10" stroke-width="1.3"/></g>`,
+  update(t, S) {
+    const k = S.cheering ? 3 : S.speed > .5 ? 2 : 1;
+    attr('tail', 'transform', `rotate(${Math.sin(t / (650 / k)) * 9 + S.svx * 1.5},138,200)`);
+    const twitch = (t % 4200) < 180 ? Math.sin((t % 4200) / 180 * Math.PI) * 12 : 0;
+    attr('earL', 'transform', `rotate(${-twitch - Math.abs(S.wave) * .4},60,100)`);
+    attr('earR', 'transform', `rotate(${Math.abs(S.wave) * .4},140,100)`);
+    attr('bell', 'transform', `rotate(${Math.sin(t / 300) * 6 - S.svx * 3},100,172)`);
+  }
+};
+
+// ---------- Boo: friendly ghost ----------
+CHARS.ghost = {
+  face: { x: 100, y: 108 }, faceShift: [10, 6], turn: 4, pivot: [100, 200],
+  motion: 'fly', tiltK: .7, tiltPivot: 110, base: 200, zAt: [150, 50], heartY: 50, shadow: 'dark',
+  defs: `
+    <radialGradient id="ghostG" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#f1edff"/><stop offset="1" stop-color="#d9d0ff"/></radialGradient>`,
+  body: `
+    <g id="head">
+      <g id="armL"><ellipse cx="38" cy="142" rx="12" ry="7" fill="url(#ghostG)" transform="rotate(-30,38,142)"/></g>
+      <g id="armR"><ellipse cx="162" cy="142" rx="12" ry="7" fill="url(#ghostG)" transform="rotate(30,162,142)"/></g>
+      <path id="ghostBody" fill="url(#ghostG)" filter="url(#softGlow)"/>
+      <ellipse cx="72" cy="66" rx="14" ry="7" fill="#fff" transform="rotate(-30,72,66)"/>
+      <g id="face">
+        <ellipse id="blushL" cx="66" cy="126" rx="11" ry="5.5" fill="#ff9ec0"/>
+        <ellipse id="blushR" cx="134" cy="126" rx="11" ry="5.5" fill="#ff9ec0"/>
+        <g id="eyesOpen">
+          <g id="eyeL" data-x="80" data-y="106"><ellipse rx="8" ry="12" fill="#2a2350"/><circle cx="-2.5" cy="-5" r="3.2" fill="#fff"/></g>
+          <g id="eyeR" data-x="120" data-y="106"><ellipse rx="8" ry="12" fill="#2a2350"/><circle cx="-2.5" cy="-5" r="3.2" fill="#fff"/></g>
+        </g>
+        <g id="eyesHappy" fill="none" stroke="#2a2350" stroke-width="3.5" stroke-linecap="round"><path d="M71,109 Q80,97 89,109"/><path d="M111,109 Q120,97 129,109"/></g>
+        <g id="eyesSleep" fill="none" stroke="#2a2350" stroke-width="3" stroke-linecap="round"><path d="M72,106 Q80,112 88,106"/><path d="M112,106 Q120,112 128,106"/></g>
+        <g id="eyesWow"><circle cx="80" cy="106" r="10" fill="#2a2350"/><circle cx="120" cy="106" r="10" fill="#2a2350"/><circle cx="77" cy="102" r="4" fill="#fff"/><circle cx="117" cy="102" r="4" fill="#fff"/></g>
+        <g id="m_smile"><path d="M93,124 Q100,130 107,124" fill="none" stroke="#2a2350" stroke-width="2" stroke-linecap="round"/></g>
+        <g id="m_grin"><path d="M91,122 Q100,123 109,122 Q107,135 100,135 Q93,135 91,122 Z" fill="#5a3a7a"/><path d="M95,131 Q100,127 105,131 Q100,135 95,131 Z" fill="#ff9ec0"/></g>
+        <g id="m_o"><ellipse cx="100" cy="128" rx="5.5" ry="7.5" fill="#2a2350"/></g>
+      </g>
+    </g>`,
+  update(t, S) {
+    // Wavy hem that ripples faster while flying.
+    const ph = t / (S.speed > .5 ? 140 : 260);
+    let d = 'M40,118 C40,60 68,32 100,32 C132,32 160,60 160,118 L160,192';
+    for (let i = 0; i < 6; i++) {
+      const x0 = 160 - i * 20, cy = 196 + (i % 2 ? -1 : 1) * (8 + Math.sin(ph + i) * 4), ey = 194 + Math.sin(ph + i * 1.3) * 3;
+      d += ` Q${x0 - 10},${cy + 6} ${x0 - 20},${ey}`;
+    }
+    attr('ghostBody', 'd', d + ' Z');
+    attr('head', 'opacity', S.sleeping ? .7 : .97);
+    const w = S.wave;
+    attr('armL', 'transform', `rotate(${Math.sin(t / 500) * 8 + w * 2},48,142)`);
+    attr('armR', 'transform', `rotate(${-Math.sin(t / 500) * 8 - w * 2},152,142)`);
+  }
+};
+
+// ---------- Jelly: mint slime ----------
+CHARS.slime = {
+  face: { x: 100, y: 164 }, faceShift: [8, 5], turn: 3, pivot: [100, 224],
+  motion: 'squish', tiltPivot: 224, base: 224, zAt: [150, 100], heartY: 70, shadow: 'dark',
+  defs: `
+    <radialGradient id="slimeG" cx=".38" cy=".35" r=".75"><stop offset="0" stop-color="#c6ffe2"/><stop offset=".55" stop-color="#5ddca3"/><stop offset="1" stop-color="#25a873"/></radialGradient>`,
+  body: `
+    <g id="head">
+      <path d="M100,62 Q108,82 130,98 C158,118 172,150 170,182 C168,212 136,224 100,224 C64,224 32,212 30,182 C28,150 42,118 70,98 Q92,82 100,62 Z" fill="url(#slimeG)" opacity=".96"/>
+      <g id="bubbles" fill="#fff" opacity=".35"><circle id="b1" r="4"/><circle id="b2" r="2.6"/><circle id="b3" r="3.2"/></g>
+      <ellipse cx="68" cy="128" rx="15" ry="9" fill="#fff" opacity=".75" transform="rotate(-38,68,128)"/>
+      <circle cx="86" cy="108" r="4" fill="#fff" opacity=".7"/>
+      <g id="sprout"><path d="M100,64 Q95,48 82,46 Q88,60 100,64 Z" fill="#4caf50"/><path d="M100,64 Q106,46 120,45 Q112,60 100,64 Z" fill="#66c26a"/></g>
+      <g id="face">
+        <ellipse id="blushL" cx="64" cy="180" rx="11" ry="5.5" fill="#ff8fa6"/>
+        <ellipse id="blushR" cx="136" cy="180" rx="11" ry="5.5" fill="#ff8fa6"/>
+        <g id="eyesOpen">
+          <g id="eyeL" data-x="80" data-y="164"><ellipse rx="7.5" ry="10.5" fill="#173a2c"/><circle cx="-2.5" cy="-4" r="3" fill="#fff"/><circle cx="2.5" cy="4" r="1.3" fill="#fff"/></g>
+          <g id="eyeR" data-x="120" data-y="164"><ellipse rx="7.5" ry="10.5" fill="#173a2c"/><circle cx="-2.5" cy="-4" r="3" fill="#fff"/><circle cx="2.5" cy="4" r="1.3" fill="#fff"/></g>
+        </g>
+        <g id="eyesHappy" fill="none" stroke="#173a2c" stroke-width="3.5" stroke-linecap="round"><path d="M72,167 Q80,156 88,167"/><path d="M112,167 Q120,156 128,167"/></g>
+        <g id="eyesSleep" fill="none" stroke="#173a2c" stroke-width="3" stroke-linecap="round"><path d="M72,164 Q80,170 88,164"/><path d="M112,164 Q120,170 128,164"/></g>
+        <g id="eyesWow"><circle cx="80" cy="164" r="10" fill="#173a2c"/><circle cx="120" cy="164" r="10" fill="#173a2c"/><circle cx="77" cy="160" r="4" fill="#fff"/><circle cx="117" cy="160" r="4" fill="#fff"/></g>
+        <g id="m_smile"><path d="M93,182 Q100,188 107,182" fill="none" stroke="#173a2c" stroke-width="2" stroke-linecap="round"/></g>
+        <g id="m_grin"><path d="M91,180 Q100,181 109,180 Q107,192 100,192 Q93,192 91,180 Z" fill="#1d5a40"/><path d="M95,188 Q100,185 105,188 Q100,192 95,188 Z" fill="#ff8fa6"/></g>
+        <g id="m_o"><ellipse cx="100" cy="185" rx="4" ry="5" fill="#173a2c"/></g>
+      </g>
+    </g>`,
+  update(t, S) {
+    attr('sprout', 'transform', `rotate(${Math.sin(t / 450) * 8 - S.svx * 2},100,64)`);
+    [[0, 130, 4600], [1, 75, 3700], [2, 112, 5200]].forEach(([i, x, p]) => {
+      const a = ((t + i * 1700) % p) / p;
+      attr('b' + (i + 1), 'transform', `translate(${x + Math.sin(a * 8) * 4},${212 - a * 90})`);
+      attr('b' + (i + 1), 'opacity', Math.sin(a * Math.PI));
+    });
+  }
+};
+
+// ---------- Pip: penguin in a scarf ----------
+CHARS.penguin = {
+  face: { x: 100, y: 124 }, faceShift: [7, 5], turn: 4, pivot: [100, 200],
+  motion: 'waddle', tiltPivot: 224, base: 226, zAt: [150, 70], heartY: 60, shadow: 'dark',
+  defs: `
+    <linearGradient id="pengG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46557d"/><stop offset="1" stop-color="#232b45"/></linearGradient>
+    <radialGradient id="bellyG" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9eef7"/></radialGradient>
+    <linearGradient id="beakG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc062"/><stop offset="1" stop-color="#ff8c1a"/></linearGradient>`,
+  body: `
+    <ellipse cx="82" cy="224" rx="15" ry="6.5" fill="#ff9a2e"/><ellipse cx="118" cy="224" rx="15" ry="6.5" fill="#ff9a2e"/>
+    <g id="flipL"><path d="M48,138 Q20,168 32,198 Q48,182 58,160 Z" fill="url(#pengG)"/></g>
+    <g id="flipR"><path d="M152,138 Q180,168 168,198 Q152,182 142,160 Z" fill="url(#pengG)"/></g>
+    <g id="head">
+      <ellipse cx="100" cy="150" rx="58" ry="74" fill="url(#pengG)"/>
+      <path d="M95,80 Q99,62 108,68 Q102,71 104,80 Z" fill="#46557d"/>
+      <ellipse cx="100" cy="176" rx="40" ry="46" fill="url(#bellyG)"/>
+      <path d="M62,82 Q78,72 94,74" fill="none" stroke="#7d8db8" stroke-width="3.5" stroke-linecap="round"/>
+      <g id="face">
+        <path d="M100,106 C88,88 56,92 58,122 C60,146 82,154 100,150 C118,154 140,146 142,122 C144,92 112,88 100,106 Z" fill="url(#bellyG)"/>
+        <ellipse id="blushL" cx="70" cy="138" rx="9" ry="4.5" fill="#ff8fa6"/>
+        <ellipse id="blushR" cx="130" cy="138" rx="9" ry="4.5" fill="#ff8fa6"/>
+        <g id="eyesOpen">
+          <g id="eyeL" data-x="82" data-y="122"><ellipse rx="6.5" ry="8.5" fill="#1b1f33"/><circle cx="-2" cy="-3" r="2.6" fill="#fff"/></g>
+          <g id="eyeR" data-x="118" data-y="122"><ellipse rx="6.5" ry="8.5" fill="#1b1f33"/><circle cx="-2" cy="-3" r="2.6" fill="#fff"/></g>
+        </g>
+        <g id="eyesHappy" fill="none" stroke="#1b1f33" stroke-width="3.2" stroke-linecap="round"><path d="M75,124 Q82,115 89,124"/><path d="M111,124 Q118,115 125,124"/></g>
+        <g id="eyesSleep" fill="none" stroke="#1b1f33" stroke-width="3" stroke-linecap="round"><path d="M75,122 Q82,127 89,122"/><path d="M111,122 Q118,127 125,122"/></g>
+        <g id="eyesWow"><circle cx="82" cy="122" r="8.5" fill="#1b1f33"/><circle cx="118" cy="122" r="8.5" fill="#1b1f33"/><circle cx="79.5" cy="118.5" r="3.4" fill="#fff"/><circle cx="115.5" cy="118.5" r="3.4" fill="#fff"/></g>
+        <g id="m_smile"><path d="M91,134 Q100,127 109,134 Q100,143 91,134 Z" fill="url(#beakG)"/></g>
+        <g id="m_grin"><path d="M90,132 Q100,124 110,132 Z" fill="url(#beakG)"/><path d="M92,135 Q100,148 108,135 Z" fill="url(#beakG)"/><path d="M94,134 Q100,140 106,134 Z" fill="#e0526e"/></g>
+        <g id="m_o"><path d="M92,132 Q100,125 108,132 Z" fill="url(#beakG)"/><path d="M94,136 Q100,145 106,136 Z" fill="url(#beakG)"/><ellipse cx="100" cy="135" rx="4" ry="2" fill="#a53550"/></g>
+      </g>
+      <path d="M48,150 Q100,170 152,150 L151,161 Q100,182 49,161 Z" fill="#ff5c7a"/>
+      <path d="M53,154 Q100,172 147,154" fill="none" stroke="#ff8fa6" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <g id="scarfTail"><path d="M124,164 L138,194 L127,197 L115,168 Z" fill="#ff5c7a"/><path d="M127,197 l2,5 M132,195.5 l2,5 M137,194 l2,5" stroke="#ff5c7a" stroke-width="2" stroke-linecap="round"/></g>
+    </g>`,
+  update(t, S) {
+    const flap = S.speed > .5 ? Math.sin(S.hop * 2) * 14 : Math.sin(t / 900) * 3;
+    const w = Math.abs(S.wave) * 2.2;
+    attr('flipL', 'transform', `rotate(${flap + w},52,142)`);
+    attr('flipR', 'transform', `rotate(${-flap - w},148,142)`);
+    attr('scarfTail', 'transform', `rotate(${Math.sin(t / 400) * 4 - S.svx * 2.5},124,166)`);
+  }
+};
+
+// ---------- Bao: bamboo panda ----------
+CHARS.panda = {
+  face: { x: 100, y: 120 }, faceShift: [8, 5], turn: 5, pivot: [100, 172],
+  motion: 'hop', tiltPivot: 200, base: 228, zAt: [152, 60], heartY: 56, shadow: 'dark',
+  defs: `
+    <radialGradient id="pandaW" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9ebf0"/></radialGradient>`,
+  body: `
+    <ellipse cx="78" cy="220" rx="17" ry="10" fill="#2b2b33"/><ellipse cx="122" cy="220" rx="17" ry="10" fill="#2b2b33"/>
+    <ellipse cx="100" cy="190" rx="45" ry="35" fill="url(#pandaW)"/>
+    <g id="bamboo">
+      <rect x="140" y="140" width="9" height="74" rx="4.5" fill="#7cc95a"/>
+      <path d="M140,162 h9 M140,186 h9" stroke="#5aa83c" stroke-width="2"/>
+      <path d="M148,150 Q166,138 174,146 Q162,154 148,152 Z" fill="#8fdc6a"/>
+      <path d="M141,172 Q124,160 120,168 Q130,176 141,174 Z" fill="#6fc24d"/>
+    </g>
+    <path d="M58,170 Q46,196 64,208 Q78,198 76,176 Z" fill="#2b2b33"/>
+    <path d="M142,170 Q156,192 140,206 Q126,198 124,176 Z" fill="#2b2b33"/>
+    <g id="head">
+      <g id="earL"><circle cx="50" cy="72" r="19" fill="#2b2b33"/><circle cx="50" cy="72" r="9" fill="#4a4a56"/></g>
+      <g id="earR"><circle cx="150" cy="72" r="19" fill="#2b2b33"/><circle cx="150" cy="72" r="9" fill="#4a4a56"/></g>
+      <ellipse cx="100" cy="118" rx="64" ry="54" fill="url(#pandaW)"/>
+      <g id="face">
+        <ellipse cx="78" cy="121" rx="14" ry="18" fill="#2b2b33" transform="rotate(28,78,121)"/>
+        <ellipse cx="122" cy="121" rx="14" ry="18" fill="#2b2b33" transform="rotate(-28,122,121)"/>
+        <ellipse id="blushL" cx="62" cy="146" rx="10" ry="5" fill="#ff9eb3"/>
+        <ellipse id="blushR" cx="138" cy="146" rx="10" ry="5" fill="#ff9eb3"/>
+        <g id="eyesOpen">
+          <g id="eyeL" data-x="80" data-y="119"><circle r="6.8" fill="#fff"/><circle cx=".6" cy=".8" r="4.6" fill="#16161c"/><circle cx="-1.6" cy="-1.6" r="1.7" fill="#fff"/></g>
+          <g id="eyeR" data-x="120" data-y="119"><circle r="6.8" fill="#fff"/><circle cx="-.6" cy=".8" r="4.6" fill="#16161c"/><circle cx="-2.6" cy="-1.6" r="1.7" fill="#fff"/></g>
+        </g>
+        <g id="eyesHappy" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><path d="M73,122 Q80,113 87,122"/><path d="M113,122 Q120,113 127,122"/></g>
+        <g id="eyesSleep" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M73,119 Q80,124 87,119"/><path d="M113,119 Q120,124 127,119"/></g>
+        <g id="eyesWow"><circle cx="80" cy="119" r="8.5" fill="#fff"/><circle cx="120" cy="119" r="8.5" fill="#fff"/><circle cx="80" cy="119" r="3.2" fill="#16161c"/><circle cx="120" cy="119" r="3.2" fill="#16161c"/></g>
+        <ellipse cx="100" cy="137" rx="6.5" ry="4.2" fill="#2b2b33"/>
+        <g id="m_smile"><path d="M93,144 Q96.5,148 100,143.5 Q103.5,148 107,144" fill="none" stroke="#2b2b33" stroke-width="1.8" stroke-linecap="round"/></g>
+        <g id="m_grin"><path d="M92,144 Q100,145 108,144 Q106,154 100,154 Q94,154 92,144 Z" fill="#c2405a"/><path d="M95,151 Q100,148 105,151 Q100,154 95,151 Z" fill="#ff9fb2"/></g>
+        <g id="m_o"><ellipse cx="100" cy="147" rx="3.5" ry="4.5" fill="#c2405a"/></g>
+      </g>
+    </g>`,
+  update(t, S) {
+    attr('bamboo', 'transform', `rotate(${Math.sin(t / 700) * 3 - S.svx * 1.5},144,214)`);
+    const w = Math.abs(S.wave) * .6;
+    attr('earL', 'transform', `rotate(${-w},70,90)`);
+    attr('earR', 'transform', `rotate(${w},130,90)`);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Engine
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function attr(id, k, v) { const e = $(id); if (e) e.setAttribute(k, v); }
+function show(id, on) { const e = $(id); if (e) e.style.display = on ? '' : 'none'; }
+
+const COMMON_DEFS = `
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="b"/><feColorMatrix in="b" values="0 0 0 0 .75  0 0 0 0 .7  0 0 0 0 1  0 0 0 .5 0" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <radialGradient id="shadowGlow"><stop offset="0" stop-color="#5ef2ff" stop-opacity=".45"/><stop offset="1" stop-color="#5ef2ff" stop-opacity="0"/></radialGradient>
+  <radialGradient id="shadowDark"><stop offset="0" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`;
+
+const S = {
+  mx: 100, my: -400, s: 1, vx: 0, vy: 0,      // raw input from native side
+  cx: 0, cy: 0, svx: 0, svy: 0, speed: 0,     // smoothed gaze / velocity
+  hop: 0, ry: 0, wave: 0, sleeping: false, cheering: false,
+};
+let ch, eyeBase = {};
+let lastMove = performance.now(), lastT = 0, lastKey = '';
+let dragging = false, dragStart = 0, cheerStart = -1e9, boopStart = -1e9;
+let blinkStart = -1e9, nextBlink = performance.now() + 1500, lastZ = 0, blush = .5;
+const particles = [];
+
+window.setCharacter = key => {
+  ch = CHARS[key] || CHARS.bot;
+  particles.length = 0;
+  $('stage').innerHTML = `<defs>${COMMON_DEFS}${ch.defs}</defs>
+    <ellipse id="shadow" cx="100" cy="232" rx="38" ry="6" fill="url(#${ch.shadow === 'glow' ? 'shadowGlow' : 'shadowDark'})"/>
+    <g id="root">${ch.body}<g id="fx"></g></g>`;
+  eyeBase = {};
+  for (const id of ['eyeL', 'eyeR']) eyeBase[id] = [+$(id).dataset.x, +$(id).dataset.y];
+};
+
+// Native side sends: cursor in viewBox units, flight velocity (points/frame, y down), points per unit.
+window.look = (mx, my, vx = 0, vy = 0, s = 1) => {
+  const key = mx + ',' + my;
+  if (key !== lastKey) { lastMove = performance.now(); lastKey = key; }
+  Object.assign(S, { mx, my, vx, vy, s });
+};
+window.setDrag = on => { dragging = on; dragStart = performance.now(); lastMove = dragStart; };
+window.cheer = () => {
+  cheerStart = performance.now(); lastMove = cheerStart;
+  for (let i = 0; i < 6; i++) spawnHeart(i * 110);
+};
+window.boop = () => { boopStart = performance.now(); lastMove = boopStart; blinkStart = boopStart; };
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function spawnHeart(delay) {
+  const el = document.createElementNS(SVGNS, 'path');
+  el.setAttribute('d', 'M0,3 C-6,-3 -3,-8 0,-4 C3,-8 6,-3 0,3 Z');
+  el.setAttribute('fill', ['#ff6b8b', '#ff9ec0', '#b9a4ff', '#5ef2ff'][Math.floor(Math.random() * 4)]);
+  el.setAttribute('opacity', 0);
+  $('fx').appendChild(el);
+  particles.push({ el, x: 100 + (Math.random() - .5) * 110, y: ch.heartY + Math.random() * 20,
+                   drift: (Math.random() - .5) * 20, rise: 50 + Math.random() * 15,
+                   born: performance.now() + delay, life: 1300, scale: 1.4 + Math.random() * .8 });
+}
+function spawnZ() {
+  const el = document.createElementNS(SVGNS, 'text');
+  el.setAttribute('class', 'zz');
+  el.textContent = 'z';
+  $('fx').appendChild(el);
+  particles.push({ el, x: ch.zAt[0], y: ch.zAt[1], drift: 18, rise: 45, born: performance.now(), life: 2600, scale: 1 });
+}
+
+function frame(t) {
+  const dt = Math.min(50, t - (lastT || t));
+  lastT = t;
+  S.sleeping = !dragging && t - lastMove > 30000;
+  S.cheering = t - cheerStart < 1300;
+
+  // Gaze: direction to the cursor, saturating with distance.
+  const dx = (S.mx - ch.face.x) * S.s, dy = (S.my - ch.face.y) * S.s;
+  const d = Math.hypot(dx, dy) || 1, f = d / (d + 140);
+  const near = d / S.s < 80;
+  S.cx += ((S.sleeping ? 0 : dx / d * f) - S.cx) * .18;
+  S.cy += ((S.sleeping ? .3 : dy / d * f) - S.cy) * .18;
+  S.svx += (S.vx - S.svx) * .2;
+  S.svy += (S.vy - S.svy) * .2;
+  S.speed = Math.hypot(S.svx, S.svy);
+  const moving = S.speed > .5;
+  if (moving) S.hop += dt * .013 * Math.min(1.5, .6 + S.speed / 12);
+
+  // Blink, with the occasional double blink.
+  if (t > nextBlink) {
+    blinkStart = t;
+    nextBlink = t + (Math.random() < .2 ? 260 : 2200 + Math.random() * 4000);
+  }
+  const bt = (t - blinkStart) / 150;
+  const open = bt < 1 ? Math.max(.1, Math.abs(Math.cos(bt * Math.PI))) : 1;
+
+  // Expression.
+  const eyes = S.cheering ? 'Happy' : dragging ? 'Wow' : S.sleeping ? 'Sleep' : 'Open';
+  for (const e of ['Open', 'Happy', 'Sleep', 'Wow']) show('eyes' + e, e === eyes);
+  const mouth = S.cheering ? 'grin' : dragging ? 'o' : (near && !S.sleeping) ? 'grin' : 'smile';
+  for (const m of ['smile', 'grin', 'o']) show('m_' + m, m === mouth);
+
+  // Eyes blink and the far-side eye narrows a touch when looking sideways.
+  const lean = 1 - Math.abs(S.cx) * .12;
+  const [lx, ly] = eyeBase.eyeL, [rx, ryy] = eyeBase.eyeR;
+  attr('eyeL', 'transform', `translate(${lx},${ly}) scale(${S.cx < 0 ? 1 : lean},${open})`);
+  attr('eyeR', 'transform', `translate(${rx},${ryy}) scale(${S.cx > 0 ? 1 : lean},${open})`);
+
+  blush += (((S.cheering || near) ? .85 : .4) - blush) * .08;
+  attr('blushL', 'opacity', blush);
+  attr('blushR', 'opacity', blush);
+
+  attr('face', 'transform', `translate(${S.cx * ch.faceShift[0]},${S.cy * ch.faceShift[1]})`);
+  attr('head', 'transform', `rotate(${S.cx * ch.turn + (S.sleeping ? 4 : 0)},${ch.pivot[0]},${ch.pivot[1]})`);
+
+  // Body motion by style.
+  let y = 0, tilt = 0, sx = 1, sy = 1;
+  const breathe = Math.sin(t / 650) * .012;
+  switch (ch.motion) {
+    case 'fly':
+      y = Math.sin(t / (S.sleeping ? 1100 : 700)) * 3.5;
+      tilt = clamp(S.svx * 1.3, -18, 18) * (ch.tiltK ?? 1);
+      break;
+    case 'hop': {
+      const h = Math.abs(Math.sin(S.hop));
+      y = moving ? -h * 12 : 0;
+      tilt = clamp(S.svx * .6, -8, 8);
+      sy = moving ? (h < .2 ? .94 : 1.02) : 1 + breathe;
+      sx = 2 - sy;
+      break;
+    }
+    case 'waddle':
+      y = moving ? -Math.abs(Math.sin(S.hop)) * 4 : 0;
+      tilt = (moving ? Math.sin(S.hop) * 9 : 0) + clamp(S.svx * .4, -6, 6);
+      sy = 1 + breathe;
+      break;
+    case 'squish': {
+      const k = moving ? Math.sin(S.hop * 2) * .09 : Math.sin(t / 420) * .025;
+      sx = 1 + k; sy = 1 - k;
+      y = moving ? -Math.max(0, Math.sin(S.hop)) * 6 : 0;
+      tilt = clamp(S.svx * .5, -6, 6);
+      break;
+    }
+  }
+  S.ry += (y - S.ry) * .35;
+
+  // Shared reactions: hop + wave on cheer, squish on boop, dangle while dragged.
+  const cp = (t - cheerStart) / 1300;
+  S.wave = cp < 1 ? Math.sin(cp * Math.PI * 6) * 14 * (1 - cp) : 0;
+  const jump = cp < 1 ? -Math.abs(Math.sin(cp * Math.PI * 2)) * 12 * (1 - cp) : 0;
+  const bp = (t - boopStart) / 450;
+  if (bp < 1) { const k = Math.sin(bp * Math.PI) * (1 - bp); sx *= 1 + k * .07; sy *= 1 - k * .08; }
+  if (dragging) tilt += Math.sin((t - dragStart) / 130) * 6;
+  attr('root', 'transform',
+    `translate(0,${S.ry + jump}) rotate(${tilt},100,${ch.tiltPivot}) translate(100,${ch.base}) scale(${sx},${sy}) translate(-100,-${ch.base})`);
+  const lift = S.ry + jump;
+  attr('shadow', 'transform', `translate(100,232) scale(${dragging ? .55 : 1 + lift * .015}) translate(-100,-232)`);
+
+  ch.update?.(t, S);
+
+  // Particles.
+  if (S.sleeping && t - lastZ > 1400) { lastZ = t; spawnZ(); }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    const a = (t - p.born) / p.life;
+    if (a < 0) continue;
+    if (a >= 1) { p.el.remove(); particles.splice(i, 1); continue; }
+    const x = p.x + p.drift * a + Math.sin(a * 9) * 3, py = p.y - p.rise * a;
+    p.el.setAttribute('transform', `translate(${x},${py}) scale(${p.scale * (.6 + a * .6)})`);
+    p.el.setAttribute('opacity', a < .15 ? a / .15 : 1 - (a - .15) / .85);
+  }
+
+  requestAnimationFrame(frame);
+}
+
+setCharacter(window.initialChar || location.hash.slice(1) || 'bot');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
