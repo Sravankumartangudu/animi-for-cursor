@@ -1,4 +1,4 @@
-# Animi
+# Animi for Cursor
 
 A tiny desktop companion for macOS. Pick a character, and it watches your cursor and follows it around the screen.
 
