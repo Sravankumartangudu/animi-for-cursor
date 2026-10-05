@@ -311,8 +311,9 @@ CHARS.panda = {
 };
 
 // ---------------------------------------------------------------------------
-// Heroes. Original designs (not based on any existing comic character). Each
-// one performs its signature move while it travels after the cursor.
+// Heroes. Tether to Aegis are original designs; Spider-Man to Captain America are
+// unofficial fan art (see README). Each one performs its signature move while it
+// travels after the cursor.
 // They share one chibi layout: head centred at (100,102), eyes at y=108.
 // ---------------------------------------------------------------------------
 const skin = (a, b) => `<radialGradient id="skin" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>`;
@@ -327,9 +328,19 @@ const legs = (suit, boot) => `
 const torso = (suit, belt) => `
     <path d="M72,154 Q100,138 128,154 L125,196 Q100,206 75,196 Z" fill="${suit}"/>
     <rect x="75" y="186" width="50" height="6" rx="3" fill="${belt}"/>`;
-const arm = (id, side, sleeve, glove) => side < 0
-  ? `<g id="${id}"><path d="M78,156 Q64,170 66,186" fill="none" stroke="${sleeve}" stroke-width="12" stroke-linecap="round"/><circle cx="66" cy="189" r="6.5" fill="${glove}"/></g>`
-  : `<g id="${id}"><path d="M122,156 Q136,170 134,186" fill="none" stroke="${sleeve}" stroke-width="12" stroke-linecap="round"/><circle cx="134" cy="189" r="6.5" fill="${glove}"/></g>`;
+const arm = (id, side, sleeve, glove, extra = '') => side < 0
+  ? `<g id="${id}"><path d="M78,156 Q64,170 66,186" fill="none" stroke="${sleeve}" stroke-width="12" stroke-linecap="round"/><circle cx="66" cy="189" r="6.5" fill="${glove}"/>${extra}</g>`
+  : `<g id="${id}"><path d="M122,156 Q136,170 134,186" fill="none" stroke="${sleeve}" stroke-width="12" stroke-linecap="round"/><circle cx="134" cy="189" r="6.5" fill="${glove}"/>${extra}</g>`;
+// Five-point star path centred on (cx,cy).
+const star = (cx, cy, R) => 'M' + Array.from({ length: 10 }, (_, i) => {
+  const r = i % 2 ? R * .4 : R, a = Math.PI * (i / 5 - .5);
+  return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`;
+}).join(' L') + ' Z';
+
+const MOUTHS = `
+    <g id="m_smile"><path d="M93,131 Q100,137 107,131" fill="none" stroke="#4a2a34" stroke-width="2.2" stroke-linecap="round"/></g>
+    <g id="m_grin"><path d="M91,129 Q100,130 109,129 Q107,141 100,141 Q93,141 91,129 Z" fill="#b8384f"/><path d="M95,137 Q100,134 105,137 Q100,141 95,137 Z" fill="#ff9fb2"/></g>
+    <g id="m_o"><ellipse cx="100" cy="135" rx="3.8" ry="4.8" fill="#b8384f"/></g>`;
 
 // Eyes have a white lens and a pupil (pupilL/pupilR) that the engine moves inside it.
 // `lid` colours the closed/happy eye lines: white over a mask, dark over skin.
@@ -342,10 +353,70 @@ function heroFace(mask = '', lid = '#fff', iris = '#1d2340') {
     <g id="eyesHappy" fill="none" stroke="${lid}" stroke-width="3.5" stroke-linecap="round"><path d="M74,111 Q82,100 90,111"/><path d="M110,111 Q118,100 126,111"/></g>
     <g id="eyesSleep" fill="none" stroke="${lid}" stroke-width="3" stroke-linecap="round"><path d="M74,108 Q82,114 90,108"/><path d="M110,108 Q118,114 126,108"/></g>
     <g id="eyesWow"><circle cx="82" cy="108" r="10.5" fill="#fff"/><circle cx="118" cy="108" r="10.5" fill="#fff"/><circle cx="82" cy="108" r="3.6" fill="${iris}"/><circle cx="118" cy="108" r="3.6" fill="${iris}"/></g>
-    <g id="m_smile"><path d="M93,131 Q100,137 107,131" fill="none" stroke="#4a2a34" stroke-width="2.2" stroke-linecap="round"/></g>
-    <g id="m_grin"><path d="M91,129 Q100,130 109,129 Q107,141 100,141 Q93,141 91,129 Z" fill="#b8384f"/><path d="M95,137 Q100,134 105,137 Q100,141 95,137 Z" fill="#ff9fb2"/></g>
-    <g id="m_o"><ellipse cx="100" cy="135" rx="3.8" ry="4.8" fill="#b8384f"/></g>
+    ${MOUTHS}
   </g>`;
+}
+
+// Masks with solid lenses instead of pupils: the whole lens moves. `lens` is the left
+// lens drawn around (0,0); the right one is its mirror image.
+function lensFace(mask, lens, { fill = '#fff', stroke = 'none', sw = 0, glow = false, mouth = true } = {}) {
+  const f = glow ? ' filter="url(#glow)"' : '';
+  const L = (sx, k = 1) => `<path d="${lens}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" transform="scale(${sx * k},${k})"${f}/>`;
+  return `<g id="face">${mask}
+    <g id="eyesOpen"><g id="eyeL" data-x="82" data-y="108">${L(1)}</g><g id="eyeR" data-x="118" data-y="108">${L(-1)}</g></g>
+    <g id="eyesHappy" fill="none" stroke="${fill}" stroke-width="4" stroke-linecap="round"${f}><path d="M71,111 Q82,99 93,111"/><path d="M107,111 Q118,99 129,111"/></g>
+    <g id="eyesSleep" fill="none" stroke="${fill}" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M72,108 Q82,113 92,108"/><path d="M108,108 Q118,113 128,108"/></g>
+    <g id="eyesWow"><g transform="translate(82,108)">${L(1, 1.25)}</g><g transform="translate(118,108)">${L(-1, 1.25)}</g></g>
+    ${mouth ? MOUTHS : ''}
+  </g>`;
+}
+
+// Signature-move poses shared by heroes with the same move.
+// Swing: line and raised arm (rope, armUp/armDown) appear while travelling, legs kick.
+function swingPose(S) {
+  const swinging = S.m > .5;
+  attr('rope', 'opacity', clamp(S.m * 1.6 - .4, 0, 1));
+  show('armUp', swinging); show('armDown', !swinging);
+  const kick = Math.sin(S.hop * .55 + .6) * 14 * S.m;
+  attr('legL', 'transform', `rotate(${kick + 8 * S.m},91,192)`);
+  attr('legR', 'transform', `rotate(${kick - 6 * S.m},109,192)`);
+  attr('armL', 'transform', `rotate(${S.m * 35 + Math.abs(S.wave) * 2},78,156)`);
+}
+// Soar: cape streams behind, the fist on the side of travel leads, legs dangle.
+function soarPose(self, t, S) {
+  const tr = -clamp(S.svx * 1.6, -22, 22), fl = Math.sin(t / (S.m > .5 ? 110 : 420)) * (2 + 5 * S.m), L = 208 + 10 * S.m;
+  attr('cape', 'd', `M78,150 Q100,140 122,150 L${134 + tr + fl},${L} Q${116 + tr},${L + 6 - fl} ${100 + tr},${L} Q${84 + tr},${L - 6 + fl} ${66 + tr - fl},${L} Z`);
+  self.r = (self.r ?? 0) + ((S.svx >= 0 ? S.m : 0) - (self.r ?? 0)) * .15;
+  self.l = (self.l ?? 0) + ((S.svx < 0 ? S.m : 0) - (self.l ?? 0)) * .15;
+  attr('armR', 'transform', `rotate(${-125 * self.r - Math.abs(S.wave)},122,156)`);
+  attr('armL', 'transform', `rotate(${125 * self.l + Math.abs(S.wave)},78,156)`);
+  const dangle = Math.sin(t / 300) * 6 * S.m;
+  attr('legL', 'transform', `rotate(${dangle},91,192)`);
+  attr('legR', 'transform', `rotate(${-dangle},109,192)`);
+}
+// Leap: big fists (shoulders at 66/134,158) go up while airborne, come down on landing.
+function leapPose(S) {
+  const a = S.air, w = Math.abs(S.wave) * 2;
+  attr('armL', 'transform', `rotate(${a * 140 + w},66,158)`);
+  attr('armR', 'transform', `rotate(${-a * 140 - w},134,158)`);
+  attr('legL', 'transform', `translate(0,${-a * 6})`);
+  attr('legR', 'transform', `translate(0,${-a * 6})`);
+}
+// Shield throw: while travelling, throw the shield ahead on a loop and catch it again.
+function shieldThrow(self, t, S) {
+  if (S.speed > .8 && t - (self.ts ?? -1e9) > 1300) { self.ts = t; self.dir = S.svx < 0 ? -1 : 1; }
+  const p = (t - (self.ts ?? -1e9)) / 950;
+  let x = 64, y = 184, r = 0, k = 1;
+  if (p < 1) {
+    const s = Math.sin(Math.PI * p);
+    x = 64 + (100 + self.dir * 78 - 64) * s;
+    y = 184 - 60 * s - 22 * Math.sin(2 * Math.PI * p);
+    r = p * 1080 * self.dir;
+    k = 1 - .25 * s;
+  }
+  attr('shield', 'transform', `translate(${x},${y}) rotate(${r}) scale(${k})`);
+  attr('armL', 'transform', `rotate(${p < 1 ? -70 * Math.sin(Math.PI * Math.min(1, p * 2.5)) : 0},78,156)`);
+  attr('armR', 'transform', `rotate(${-Math.abs(S.wave) * 2},122,156)`);
 }
 
 // ---------- Tether: swings across the screen on a grapple line ----------
@@ -363,15 +434,7 @@ CHARS.tether = { ...HERO,
       ${heroFace(`<path d="${DOMINO}" fill="#24346a"/><circle cx="82" cy="108" r="12.5" fill="none" stroke="#ff8a3d" stroke-width="3"/><circle cx="118" cy="108" r="12.5" fill="none" stroke="#ff8a3d" stroke-width="3"/>`)}
     </g>
     <g id="armUp"><path d="M124,156 Q152,120 140,70" fill="none" stroke="#2f4378" stroke-width="12" stroke-linecap="round"/><rect x="138" y="96" width="14" height="9" rx="3" fill="#59607a" transform="rotate(-12,145,100)"/><circle cx="140" cy="66" r="6.5" fill="#ff8a3d"/></g>`,
-  update(t, S) {
-    const swinging = S.m > .5;
-    attr('rope', 'opacity', clamp(S.m * 1.6 - .4, 0, 1));
-    show('armUp', swinging); show('armDown', !swinging);
-    const kick = Math.sin(S.hop * .55 + .6) * 14 * S.m;
-    attr('legL', 'transform', `rotate(${kick + 8 * S.m},91,192)`);
-    attr('legR', 'transform', `rotate(${kick - 6 * S.m},109,192)`);
-    attr('armL', 'transform', `rotate(${S.m * 35 + Math.abs(S.wave) * 2},78,156)`);
-  }
+  update(t, S) { swingPose(S); }
 };
 
 // ---------- Cirrus: flies fist-first with a streaming cape ----------
@@ -389,18 +452,7 @@ CHARS.cirrus = { ...HERO,
       ${heroFace(`<path d="${DOMINO}" fill="#6a3fe0"/>`)}
     </g>
     ${arm('armL', -1, '#dce8f8', '#3d7bf0')}${arm('armR', 1, '#dce8f8', '#3d7bf0')}`,
-  update(t, S) {
-    const tr = -clamp(S.svx * 1.6, -22, 22), fl = Math.sin(t / (S.m > .5 ? 110 : 420)) * (2 + 5 * S.m), L = 208 + 10 * S.m;
-    attr('cape', 'd', `M78,150 Q100,140 122,150 L${134 + tr + fl},${L} Q${116 + tr},${L + 6 - fl} ${100 + tr},${L} Q${84 + tr},${L - 6 + fl} ${66 + tr - fl},${L} Z`);
-    // Leading fist: the arm on the side it's flying toward.
-    this.r = (this.r ?? 0) + ((S.svx >= 0 ? S.m : 0) - (this.r ?? 0)) * .15;
-    this.l = (this.l ?? 0) + ((S.svx < 0 ? S.m : 0) - (this.l ?? 0)) * .15;
-    attr('armR', 'transform', `rotate(${-125 * this.r - Math.abs(S.wave)},122,156)`);
-    attr('armL', 'transform', `rotate(${125 * this.l + Math.abs(S.wave)},78,156)`);
-    const dangle = Math.sin(t / 300) * 6 * S.m;
-    attr('legL', 'transform', `rotate(${dangle},91,192)`);
-    attr('legR', 'transform', `rotate(${-dangle},109,192)`);
-  }
+  update(t, S) { soarPose(this, t, S); }
 };
 
 // ---------- Volta: spins a storm staff overhead, crackling with sparks ----------
@@ -488,14 +540,7 @@ CHARS.rumble = { ...HERO,
       <circle cx="52" cy="192" r="13" fill="url(#steel)"/><path d="M44,186 h14 M43,192 h16" stroke="#8a95ab" stroke-width="1.5" stroke-linecap="round"/></g>
     <g id="armR"><path d="M134,164 Q144,176 146,186" fill="none" stroke="#4d5c80" stroke-width="14" stroke-linecap="round"/><circle cx="134" cy="158" r="13" fill="url(#suitG)"/>
       <circle cx="148" cy="192" r="13" fill="url(#steel)"/><path d="M142,186 h14 M141,192 h16" stroke="#8a95ab" stroke-width="1.5" stroke-linecap="round"/></g>`,
-  update(t, S) {
-    // Fists go up while airborne and come down with the landing.
-    const a = S.air, w = Math.abs(S.wave) * 2;
-    attr('armL', 'transform', `rotate(${a * 140 + w},66,158)`);
-    attr('armR', 'transform', `rotate(${-a * 140 - w},134,158)`);
-    attr('legL', 'transform', `translate(0,${-a * 6})`);
-    attr('legR', 'transform', `translate(0,${-a * 6})`);
-  }
+  update(t, S) { leapPose(S); }
 };
 
 // ---------- Aegis: hurls a round shield that boomerangs back ----------
@@ -519,22 +564,174 @@ CHARS.aegis = { ...HERO,
     <g id="shield"><circle r="23" fill="url(#bronze)" stroke="#9a5a1c" stroke-width="2.5"/><circle r="16" fill="none" stroke="#fff3d6" stroke-width="2" opacity=".7"/>
       <circle r="5.5" fill="#fff3d6"/><path d="M0,-13 V-9 M0,13 V9 M-13,0 H-9 M13,0 H9 M-9,-9 L-6.5,-6.5 M9,9 L6.5,6.5 M-9,9 L-6.5,6.5 M9,-9 L6.5,-6.5" stroke="#fff3d6" stroke-width="2.4" stroke-linecap="round"/>
       <path d="M-17,-11 A20,20 0 0 1 -5,-19.5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/></g>`,
-  update(t, S) {
-    // While travelling, throw the shield ahead on a loop and catch it again.
-    if (S.speed > .8 && t - (this.ts ?? -1e9) > 1300) { this.ts = t; this.dir = S.svx < 0 ? -1 : 1; }
-    const p = (t - (this.ts ?? -1e9)) / 950;
-    let x = 64, y = 184, r = 0, k = 1;
-    if (p < 1) {
-      const s = Math.sin(Math.PI * p);
-      x = 64 + (100 + this.dir * 78 - 64) * s;
-      y = 184 - 60 * s - 22 * Math.sin(2 * Math.PI * p);
-      r = p * 1080 * this.dir;
-      k = 1 - .25 * s;
-    }
-    attr('shield', 'transform', `translate(${x},${y}) rotate(${r}) scale(${k})`);
-    attr('armL', 'transform', `rotate(${p < 1 ? -70 * Math.sin(Math.PI * Math.min(1, p * 2.5)) : 0},78,156)`);
-    attr('armR', 'transform', `rotate(${-Math.abs(S.wave) * 2},122,156)`);
+  update(t, S) { shieldThrow(this, t, S); }
+};
+
+// ---------------------------------------------------------------------------
+// Fan-art heroes. Unofficial and non-commercial: these characters and their
+// names belong to Marvel and DC. Same chibi layout as the heroes above.
+// ---------------------------------------------------------------------------
+
+// Spider-Man's mask webbing: spokes from the nose plus rings that sag between them.
+const WEB = (() => {
+  const n = 12, pt = (r, a) => `${(100 + r * Math.cos(a)).toFixed(1)},${(112 + r * Math.sin(a)).toFixed(1)}`;
+  let d = '';
+  for (let i = 0; i < n; i++) d += `M100,112 L${pt(66, i * 2 * Math.PI / n)} `;
+  for (const r of [15, 28, 42, 56]) {
+    d += `M${pt(r, 0)} `;
+    for (let i = 1; i <= n; i++) d += `Q${pt(r * .86, (i - .5) * 2 * Math.PI / n)} ${pt(r, i * 2 * Math.PI / n)} `;
   }
+  return d;
+})();
+
+// ---------- Spider-Man: web-swings across the screen ----------
+CHARS.spidey = { ...HERO,
+  motion: 'swing', tiltPivotX: 140, tiltPivot: -10, eyeMove: [2.2, 2],
+  defs: skin('#ff5257', '#c4161f') + grad('suitG', '#e8262e', '#a8121a') +
+    '<clipPath id="headClip"><ellipse cx="100" cy="102" rx="46" ry="44"/></clipPath>',
+  body: `
+    <g id="rope"><path d="M140,-12 V64" stroke="#8d97ab" stroke-width="3.2" stroke-linecap="round"/><path d="M140,-12 V64" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></g>
+    ${legs('#2453c9', '#d42a32')}${torso('url(#suitG)', '#a8121a')}
+    <path d="M72,154 Q78,151 84,155 Q81,178 86,200 Q80,199 75,196 Z M128,154 Q122,151 116,155 Q119,178 114,200 Q120,199 125,196 Z" fill="#2453c9"/>
+    <g fill="#111"><ellipse cx="100" cy="164" rx="3" ry="3.4"/><ellipse cx="100" cy="172" rx="3.6" ry="5.4"/></g>
+    <path d="M98,163 L90,157 L88,151 M98,166 L88,163 L85,159 M98,171 L89,173 L86,179 M98,174 L91,179 L89,186 M102,163 L110,157 L112,151 M102,166 L112,163 L115,159 M102,171 L111,173 L114,179 M102,174 L109,179 L111,186"
+      fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${arm('armL', -1, '#d42a32', '#c4161f')}
+    <g id="armDown">${arm('armDownI', 1, '#d42a32', '#c4161f')}</g>
+    <g id="head">${HEAD}
+      <path d="${WEB}" fill="none" stroke="#5c0a10" stroke-width=".9" opacity=".6" clip-path="url(#headClip)"/>
+      ${lensFace('', 'M9,6 Q3,-9 -14,-12 Q-18,2 -6,9 Q3,12 9,6 Z', { stroke: '#111', sw: 3.2, mouth: false })}
+    </g>
+    <g id="armUp"><path d="M124,156 Q152,120 140,70" fill="none" stroke="#d42a32" stroke-width="12" stroke-linecap="round"/><circle cx="140" cy="66" r="6.5" fill="#c4161f"/></g>`,
+  update(t, S) { swingPose(S); }
+};
+
+// ---------- Iron Man: flies on boot thrusters, repulsors glowing ----------
+CHARS.ironman = { ...HERO,
+  motion: 'fly', tiltK: .9, tiltPivot: 150, eyeMove: [2.4, 1.6],
+  defs: skin('#ef3b3f', '#a3121a') + grad('suitG', '#e5323a', '#9c1018') + grad('gold', '#ffe08a', '#d29a1e') +
+    '<linearGradient id="thrust" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbe6"/><stop offset=".35" stop-color="#ffc24a"/><stop offset="1" stop-color="#ff6a1f" stop-opacity="0"/></linearGradient>',
+  body: `
+    <path id="flameL" d="M84,224 Q90,252 96,224 Z" fill="url(#thrust)" filter="url(#glow)"/>
+    <path id="flameR" d="M104,224 Q110,252 116,224 Z" fill="url(#thrust)" filter="url(#glow)"/>
+    ${legs('url(#suitG)', '#d29a1e')}${torso('url(#suitG)', '#d29a1e')}
+    <path d="M88,174 H112 L110,185 H90 Z" fill="url(#gold)"/>
+    <circle cx="100" cy="163" r="8" fill="#7a0e14"/>
+    <circle id="reactor" cx="100" cy="163" r="5.6" fill="#e6ffff" filter="url(#glow)"/>
+    <circle cx="100" cy="163" r="5.6" fill="none" stroke="#7fe8ff" stroke-width="1.5"/>
+    <g id="head">${HEAD}
+      <path d="M80,64 Q100,56 120,64" fill="none" stroke="#ff8a8d" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+      ${lensFace(`<path d="M62,94 Q100,84 138,94 L135,122 Q125,144 100,148 Q75,144 65,122 Z" fill="url(#gold)" stroke="#a87412" stroke-width="1.5"/>
+        <path d="M88,135 H112" stroke="#8a5e0c" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M70,120 L80,128 M130,120 L120,128" stroke="#a87412" stroke-width="1.6" stroke-linecap="round"/>`,
+        'M-11,-2 L8,-4 L10,1 L-9,3 Z', { fill: '#e9ffff', glow: true, mouth: false })}
+    </g>
+    ${arm('armL', -1, '#d42a32', 'url(#gold)', '<circle id="repL" cx="66" cy="191" r="4" fill="#e6ffff" filter="url(#glow)"/>')}
+    ${arm('armR', 1, '#d42a32', 'url(#gold)', '<circle id="repR" cx="134" cy="191" r="4" fill="#e6ffff" filter="url(#glow)"/>')}`,
+  update(t, S) {
+    const m = S.m, w = Math.abs(S.wave) * 2;
+    for (const [s, x] of [['L', 90], ['R', 110]]) {
+      const len = (S.sleeping ? .25 : .4) + .6 * Math.min(1, S.speed / 8) + Math.random() * .12;
+      attr('flame' + s, 'transform', `translate(${x},224) scale(${.85 + Math.random() * .15},${len}) translate(${-x},-224)`);
+    }
+    // Arms swing out and back, palms down, the classic thruster-flight pose.
+    attr('armL', 'transform', `rotate(${28 * m + w},78,156)`);
+    attr('armR', 'transform', `rotate(${-28 * m - w},122,156)`);
+    attr('repL', 'opacity', .25 + .75 * m);
+    attr('repR', 'opacity', .25 + .75 * m);
+    attr('reactor', 'opacity', S.sleeping ? .5 : .85 + .15 * Math.sin(t / 300));
+  }
+};
+
+// ---------- Superman: flies fist-first, red cape streaming ----------
+CHARS.superman = { ...HERO,
+  motion: 'soar', tiltPivot: 150,
+  defs: skin('#ffd9bd', '#eab08a') + grad('suitG', '#3a74e0', '#1d48b0') + grad('capeG', '#ef3a3f', '#b3121b'),
+  body: `
+    <path id="cape" fill="url(#capeG)"/>
+    ${legs('url(#suitG)', '#d6232b')}${torso('url(#suitG)', '#ffd23f')}
+    <path d="M75,191 Q100,198 125,191 L125,196 Q100,206 75,196 Z" fill="#d6232b"/>
+    <path d="M84,157 H116 L121,163 L100,186 L79,163 Z" fill="#ffd23f" stroke="#d6232b" stroke-width="2.4" stroke-linejoin="round"/>
+    <text x="100" y="176" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="16" fill="#d6232b">S</text>
+    <g id="head">${HEAD}
+      <path d="M54,98 Q50,54 100,54 Q150,54 146,98 Q142,80 124,74 Q100,70 76,74 Q58,80 54,98 Z" fill="#1c1d2b"/>
+      <path d="M98,72 Q89,80 96,86 Q102,88 101,82" fill="none" stroke="#1c1d2b" stroke-width="3.2" stroke-linecap="round"/>
+      ${heroFace('', '#4a2a34', '#2d6fe0')}
+    </g>
+    ${arm('armL', -1, '#2a62d0', '#ffd0b0')}${arm('armR', 1, '#2a62d0', '#ffd0b0')}`,
+  update(t, S) { soarPose(this, t, S); }
+};
+
+// ---------- Batman: glides on a cape that spreads into bat wings ----------
+CHARS.batman = { ...HERO,
+  motion: 'glide', tiltPivot: 150,
+  defs: skin('#f6cfae', '#dca47c') + grad('suitG', '#9aa0ad', '#646a78') + grad('capeG', '#3a3f4f', '#1b1e28'),
+  body: `
+    <path id="cape" fill="url(#capeG)"/>
+    ${legs('url(#suitG)', '#22252f')}${torso('url(#suitG)', '#f2c230')}
+    <ellipse cx="100" cy="168" rx="16" ry="9" fill="#f2c230" stroke="#22252f" stroke-width="1.6"/>
+    <path d="M86,168 Q89,163 93,164 L95,160.5 L97.5,164 H102.5 L105,160.5 L107,164 Q111,163 114,168 Q110,166.5 108.5,170.5 Q104,168.5 100,173 Q96,168.5 91.5,170.5 Q90,166.5 86,168 Z" fill="#1b1e28"/>
+    <g id="head">${HEAD}
+      <path d="M52,116 Q46,64 68,54 L66,26 L84,48 Q100,44 116,48 L134,26 L132,54 Q154,64 148,116 Q140,126 128,124 Q114,118 106,124 L100,128 L94,124 Q86,118 72,124 Q60,126 52,116 Z" fill="url(#capeG)"/>
+      ${lensFace('', 'M-11,-4 Q0,-2 10,2 Q1,7 -9,3 Z')}
+    </g>
+    ${arm('armL', -1, '#7e8492', '#22252f')}${arm('armR', 1, '#7e8492', '#22252f')}`,
+  update(t, S) {
+    // The cape hangs as a scalloped drape at rest and opens into wings while gliding.
+    const m = S.m, W = 34 + 46 * m, tipY = 168 - 26 * m + Math.sin(t / 170) * 3 * m, botY = 214 - 8 * m;
+    let d = `M78,148 Q100,140 122,148 Q${100 + W * .7},${152 - 16 * m} ${100 + W},${tipY}`, px = 100 + W, py = tipY;
+    for (let i = 1; i <= 5; i++) {
+      const x = 100 + W - i * W * .4, y = tipY + (botY - tipY) * Math.sin(Math.PI * i / 5);
+      d += ` Q${(px + x) / 2},${(py + y) / 2 - 9} ${x},${y}`;
+      px = x; py = y;
+    }
+    attr('cape', 'd', d + ` Q${100 - W * .7},${152 - 16 * m} 78,148 Z`);
+    const w = Math.abs(S.wave) * 2;
+    attr('armL', 'transform', `rotate(${62 * m + w},78,156)`);
+    attr('armR', 'transform', `rotate(${-62 * m - w},122,156)`);
+  }
+};
+
+// ---------- Hulk: giant leaps that land with a smash ----------
+CHARS.hulk = { ...HERO,
+  motion: 'leap', tiltPivot: 224, faceShift: [6, 4], turn: 3,
+  defs: skin('#94d46c', '#57a03e') + grad('suitG', '#86c862', '#4e9238') + grad('shorts', '#8a5ad6', '#5a33a3'),
+  body: `
+    <g id="legL"><rect x="78" y="190" width="19" height="28" rx="8" fill="url(#suitG)"/><ellipse cx="86" cy="220" rx="12" ry="5.5" fill="#4e9238"/></g>
+    <g id="legR"><rect x="103" y="190" width="19" height="28" rx="8" fill="url(#suitG)"/><ellipse cx="114" cy="220" rx="12" ry="5.5" fill="#4e9238"/></g>
+    <path d="M62,156 Q100,134 138,156 L133,196 Q100,206 67,196 Z" fill="url(#suitG)"/>
+    <path d="M78,160 Q90,170 100,163 Q110,170 122,160 M100,166 V182 M90,176 H96 M104,176 H110" fill="none" stroke="#3f7a2c" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    <path d="M66,186 Q100,196 134,186 L135,201 L128,207 L122,200 L114,208 L106,201 L100,207 L94,201 L86,208 L78,200 L72,207 L65,201 Z" fill="url(#shorts)"/>
+    <g id="head">${HEAD}
+      <path d="M52,104 L46,84 L56,88 L52,66 L66,74 L68,52 L82,64 L90,46 L100,60 L110,46 L118,64 L132,52 L134,74 L148,66 L144,88 L154,84 L148,104 Q140,82 120,78 Q100,75 80,78 Q60,82 52,104 Z" fill="#1d201c"/>
+      ${heroFace('<path d="M68,95 L94,103 M132,95 L106,103" stroke="#1d201c" stroke-width="5.5" stroke-linecap="round"/>', '#24481a', '#2e8a2e')}
+    </g>
+    <g id="armL"><path d="M66,164 Q56,176 54,186" fill="none" stroke="#5fa845" stroke-width="15" stroke-linecap="round"/><circle cx="66" cy="158" r="14" fill="url(#suitG)"/>
+      <circle cx="52" cy="192" r="14" fill="url(#suitG)"/><path d="M44,186 h14 M43,192 h16" stroke="#3f7a2c" stroke-width="1.6" stroke-linecap="round"/></g>
+    <g id="armR"><path d="M134,164 Q144,176 146,186" fill="none" stroke="#5fa845" stroke-width="15" stroke-linecap="round"/><circle cx="134" cy="158" r="14" fill="url(#suitG)"/>
+      <circle cx="148" cy="192" r="14" fill="url(#suitG)"/><path d="M142,186 h14 M141,192 h16" stroke="#3f7a2c" stroke-width="1.6" stroke-linecap="round"/></g>`,
+  update(t, S) { leapPose(S); }
+};
+
+// ---------- Captain America: throws his shield, which boomerangs back ----------
+CHARS.cap = { ...HERO,
+  motion: 'hop', tiltPivot: 200,
+  defs: skin('#ffdcc0', '#ebb48c') + grad('suitG', '#3a6ad8', '#22449e'),
+  body: `
+    ${legs('url(#suitG)', '#d6232b')}${torso('url(#suitG)', '#8a5a2e')}
+    <path d="${star(100, 165, 8)}" fill="#fff"/>
+    <path d="M84,175 H116 V186 H84 Z" fill="#fff"/><path d="M87,175 h5 v11 h-5 Z M97.5,175 h5 v11 h-5 Z M108,175 h5 v11 h-5 Z" fill="#d6232b"/>
+    ${arm('armR', 1, '#2f5cc4', '#d6232b')}
+    <g id="head">${HEAD}
+      <path d="M52,112 Q48,56 100,54 Q152,56 148,112 Q140,124 128,124 Q114,122 100,116 Q86,122 72,124 Q60,124 52,112 Z" fill="url(#suitG)"/>
+      <text x="100" y="88" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="18" fill="#fff">A</text>
+      <path d="M54,96 L40,86 L44,94 L36,92 L46,102 Z M146,96 L160,86 L156,94 L164,92 L154,102 Z" fill="#fff"/>
+      ${heroFace('', '#fff', '#2d5fd0')}
+    </g>
+    ${arm('armL', -1, '#2f5cc4', '#d6232b')}
+    <g id="shield"><circle r="23" fill="#d6232b"/><circle r="18" fill="#f4f4f4"/><circle r="13" fill="#d6232b"/><circle r="8.5" fill="#2a56c4"/><path d="${star(0, 0, 8)}" fill="#fff"/>
+      <path d="M-17,-11 A20,20 0 0 1 -5,-19.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".6"/></g>`,
+  update(t, S) { shieldThrow(this, t, S); }
 };
 
 // ---------------------------------------------------------------------------
@@ -731,6 +928,10 @@ function frame(t) {
     case 'soar':    // leans into the direction of travel, up to almost horizontal
       y = Math.sin(t / 700) * 3;
       tilt = clamp(S.svx * 3.6, -50, 50);
+      break;
+    case 'glide':   // swoops up and down, banking into the turn
+      y = moving ? Math.sin(S.hop * .45) * 7 : Math.sin(t / 900) * 2;
+      tilt = clamp(S.svx * 2.2, -30, 30);
       break;
     case 'dash':    // leans forward from the feet with a fast running bounce
       y = moving ? -Math.abs(Math.sin(S.hop * 1.6)) * 3 : 0;

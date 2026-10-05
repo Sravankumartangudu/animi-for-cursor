@@ -71,6 +71,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ("volta", "⚡  Volta — storm staff"), ("gust", "💨  Gust — speedster"),
         ("rumble", "⛰️  Rumble — ground smasher"), ("aegis", "🛡️  Aegis — shield thrower"),
     ]
+    /// Unofficial fan art, listed after a separator in the Heroes menu.
+    private let fanHeroes: [(key: String, name: String)] = [
+        ("spidey", "🕷️  Spider-Man — web swing"), ("ironman", "🔥  Iron Man — thruster flight"),
+        ("superman", "🦸  Superman — flight"), ("batman", "🦇  Batman — cape glide"),
+        ("hulk", "💪  Hulk — smash"), ("cap", "⭐  Captain America — shield throw"),
+    ]
     private let defaults = UserDefaults.standard
 
     private var width: CGFloat {
@@ -186,15 +192,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func buildMenu() {
         menu.removeAllItems()
-        for (title, list) in [("Character", characters), ("Heroes", heroes)] {
+        for (title, sections) in [("Character", [characters]), ("Heroes", [heroes, fanHeroes])] {
             let groupItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
             let groupMenu = NSMenu()
-            for c in list {
-                let item = NSMenuItem(title: c.name, action: #selector(setCharacter(_:)), keyEquivalent: "")
-                item.representedObject = c.key
-                item.target = self
-                item.state = c.key == character ? .on : .off
-                groupMenu.addItem(item)
+            for (i, list) in sections.enumerated() {
+                if i > 0 { groupMenu.addItem(.separator()) }
+                for c in list {
+                    let item = NSMenuItem(title: c.name, action: #selector(setCharacter(_:)), keyEquivalent: "")
+                    item.representedObject = c.key
+                    item.target = self
+                    item.state = c.key == character ? .on : .off
+                    groupMenu.addItem(item)
+                }
             }
             groupItem.submenu = groupMenu
             menu.addItem(groupItem)

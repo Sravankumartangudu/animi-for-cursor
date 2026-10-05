@@ -1,3 +1,5 @@
+<img src="docs/icon.png" width="128" align="right" alt="Animi app icon">
+
 # Animi for Cursor
 
 A tiny desktop companion for macOS. Pick a character, and it watches your cursor and follows it around the screen.
@@ -32,7 +34,7 @@ A tiny desktop companion for macOS. Pick a character, and it watches your cursor
 
 ### Heroes
 
-Six original superheroes, in their own **Heroes** menu. Each one does its signature move while it travels after your cursor.
+Twelve superheroes in their own **Heroes** menu: six originals and six fan-art versions of famous heroes. Each one does its signature move while it travels after your cursor.
 
 ![Hero moves](docs/hero-moves.png)
 
@@ -45,7 +47,22 @@ Six original superheroes, in their own **Heroes** menu. Each one does its signat
 | ⛰️ | **Rumble** | Giant leaps that land with a shockwave and flying pebbles |
 | 🛡️ | **Aegis** | Throws a round shield that boomerangs back to the hand |
 
-All characters and heroes are original designs. They aren't based on any comic, film or game character.
+#### Fan-art heroes
+
+![Fan-art hero moves](docs/fan-heroes.png)
+
+| | Name | Signature move |
+|---|---|---|
+| 🕷️ | **Spider-Man** | Web-swings across the screen, legs kicking |
+| 🔥 | **Iron Man** | Flies on boot thrusters with glowing repulsors and arc reactor |
+| 🦸 | **Superman** | Flies fist-first with his red cape streaming |
+| 🦇 | **Batman** | Glides and swoops on a cape that opens into bat wings |
+| 💪 | **Hulk** | Giant leaps that land with a smash |
+| ⭐ | **Captain America** | Throws his shield, which boomerangs back to his hand |
+
+> **Trademark notice:** Spider-Man, Iron Man, Hulk and Captain America are trademarks of Marvel. Superman and Batman are trademarks of DC. The fan-art heroes are unofficial, non-commercial fan art. This project isn't affiliated with or endorsed by Marvel, DC or Disney, and those characters aren't covered by the MIT license. If a rights holder asks, they'll be removed.
+
+All other characters and heroes, Bolt to Aegis, are original designs.
 
 ## Requirements
 
@@ -129,7 +146,7 @@ Things it does on its own:
 | Item | What it does |
 |---|---|
 | **Character** | Switch between Bolt, Mochi, Boo, Jelly, Pip and Bao. |
-| **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis. |
+| **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis, or, below the line, Spider-Man, Iron Man, Superman, Batman, Hulk and Captain America. |
 | **Follow Cursor** | On: it travels after the cursor. Off: it stays where you put it, but still watches the cursor. |
 | **Size** | Tiny, Small (default), Medium or Large. |
 | **Say Hi ♥** | Plays the happy animation. |
@@ -200,6 +217,7 @@ This can happen if you copy a built `Animi.app` to another Mac. Right-click the 
 | `animi.html` | All character artwork (SVG) and the shared animation engine |
 | `main.swift` | Transparent floating window, cursor tracking, following, dragging, menu |
 | `build.sh` | Compiles and bundles `Animi.app` |
+| `AppIcon.icns` | The app icon (Bolt watching a cursor) |
 | `gallery.html` | Open in a browser to preview every character side by side |
 
 After changing anything, run `./build.sh` and reopen the app.
@@ -214,4 +232,4 @@ Bug reports, ideas and new characters are welcome. See [CONTRIBUTING.md](CONTRIB
 
 ## License
 
-[MIT](LICENSE) © 2026 Sravankumartangudu. You're free to use, change and share it. All characters are original designs.
+[MIT](LICENSE) © 2026 Sravankumartangudu. You're free to use, change and share it. The license covers the code and the original characters. It doesn't cover the fan-art heroes, which belong to their owners (see the [trademark notice](#fan-art-heroes)).

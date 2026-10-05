@@ -24,11 +24,11 @@ Open an [issue](https://github.com/Sravankumartangudu/animi-for-cursor/issues) a
 
 1. Add an entry to `CHARS` in `animi.html`. Copy an existing character with a similar shape as a starting point.
 2. Use the shared element ids so the engine can animate it: `root`, `head`, `face`, `eyesOpen` with `eyeL`/`eyeR` (centres in `data-x`/`data-y`), `eyesHappy`, `eyesSleep`, `eyesWow`, `m_smile`, `m_grin`, `m_o`, `blushL`, `blushR`. If the eyes have a white with a pupil, wrap the pupil in `pupilL`/`pupilR` so only the pupil moves.
-3. Set `motion` to `fly`, `hop`, `waddle`, `squish`, `swing`, `soar`, `dash` or `leap`. Put any character-specific animation (tails, capes, props and so on) in `update(t, S)`. `S.m` goes from 0 to 1 while the character is travelling, which is the place for signature moves.
+3. Set `motion` to `fly`, `hop`, `waddle`, `squish`, `swing`, `soar`, `glide`, `dash` or `leap`. Put any character-specific animation (tails, capes, props and so on) in `update(t, S)`. `S.m` goes from 0 to 1 while the character is travelling, which is the place for signature moves.
 4. Add the character to the `characters` or `heroes` list in `main.swift`, and to `gallery.html`. To preview a character mid-move in a browser, open `animi.html#<key>:move`.
 5. Add it to the Characters table in `README.md` and note it in `CHANGELOG.md`.
 
-Please only contribute artwork you created yourself. Don't add copyrighted or trademarked characters. That includes official superheroes: no real hero names, logos, emblems or recognisable costumes. Generic powers like flying, swinging or super-speed are fine.
+Please only contribute artwork you created yourself. The fan-art heroes are a curated exception, kept as unofficial, non-commercial fan art with a trademark notice in the README. Please don't add more characters that belong to someone else (from comics, films, games and so on). Original characters with generic powers like flying, swinging or super-speed are always welcome.
 
 ## License
 
