@@ -7,7 +7,7 @@ APP=Animi.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-swiftc -O -swift-version 5 main.swift -o "$APP/Contents/MacOS/Animi" -framework Cocoa -framework WebKit
+swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos13" main.swift -o "$APP/Contents/MacOS/Animi" -framework Cocoa -framework WebKit
 cp animi.html "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -20,6 +20,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key><string>Animi</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>
 </dict>
