@@ -266,7 +266,7 @@ CHARS.penguin = {
 // ---------- Bao: bamboo panda ----------
 CHARS.panda = {
   face: { x: 100, y: 120 }, faceShift: [8, 5], turn: 5, pivot: [100, 172],
-  motion: 'hop', tiltPivot: 200, base: 228, zAt: [152, 60], heartY: 56, shadow: 'dark',
+  motion: 'hop', tiltPivot: 200, base: 228, zAt: [152, 60], heartY: 56, shadow: 'dark', eyeMove: [2, 1.8],
   defs: `
     <radialGradient id="pandaW" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9ebf0"/></radialGradient>`,
   body: `
@@ -290,8 +290,8 @@ CHARS.panda = {
         <ellipse id="blushL" cx="62" cy="146" rx="10" ry="5" fill="#ff9eb3"/>
         <ellipse id="blushR" cx="138" cy="146" rx="10" ry="5" fill="#ff9eb3"/>
         <g id="eyesOpen">
-          <g id="eyeL" data-x="80" data-y="119"><circle r="6.8" fill="#fff"/><circle cx=".6" cy=".8" r="4.6" fill="#16161c"/><circle cx="-1.6" cy="-1.6" r="1.7" fill="#fff"/></g>
-          <g id="eyeR" data-x="120" data-y="119"><circle r="6.8" fill="#fff"/><circle cx="-.6" cy=".8" r="4.6" fill="#16161c"/><circle cx="-2.6" cy="-1.6" r="1.7" fill="#fff"/></g>
+          <g id="eyeL" data-x="80" data-y="119"><circle r="6.8" fill="#fff"/><g id="pupilL"><circle cx=".6" cy=".8" r="4.6" fill="#16161c"/><circle cx="-1.6" cy="-1.6" r="1.7" fill="#fff"/></g></g>
+          <g id="eyeR" data-x="120" data-y="119"><circle r="6.8" fill="#fff"/><g id="pupilR"><circle cx="-.6" cy=".8" r="4.6" fill="#16161c"/><circle cx="-2.6" cy="-1.6" r="1.7" fill="#fff"/></g></g>
         </g>
         <g id="eyesHappy" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><path d="M73,122 Q80,113 87,122"/><path d="M113,122 Q120,113 127,122"/></g>
         <g id="eyesSleep" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M73,119 Q80,124 87,119"/><path d="M113,119 Q120,124 127,119"/></g>
@@ -307,6 +307,233 @@ CHARS.panda = {
     const w = Math.abs(S.wave) * .6;
     attr('earL', 'transform', `rotate(${-w},70,90)`);
     attr('earR', 'transform', `rotate(${w},130,90)`);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Heroes. Original designs (not based on any existing comic character). Each
+// one performs its signature move while it travels after the cursor.
+// They share one chibi layout: head centred at (100,102), eyes at y=108.
+// ---------------------------------------------------------------------------
+const skin = (a, b) => `<radialGradient id="skin" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>`;
+const grad = (id, a, b) => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+const DOMINO = 'M56,100 Q78,86 100,96 Q122,86 144,100 Q150,116 136,124 Q116,128 100,118 Q84,128 64,124 Q50,116 56,100 Z';
+const HEAD = '<ellipse cx="100" cy="102" rx="46" ry="44" fill="url(#skin)"/>';
+const HERO = { face: { x: 100, y: 108 }, faceShift: [7, 4], turn: 4, pivot: [100, 150], eyeMove: [3, 3.2],
+               base: 224, zAt: [150, 50], heartY: 50, shadow: 'dark' };
+const legs = (suit, boot) => `
+    <g id="legL"><rect x="84" y="190" width="14" height="28" rx="7" fill="${suit}"/><ellipse cx="90" cy="221" rx="9.5" ry="5" fill="${boot}"/></g>
+    <g id="legR"><rect x="102" y="190" width="14" height="28" rx="7" fill="${suit}"/><ellipse cx="110" cy="221" rx="9.5" ry="5" fill="${boot}"/></g>`;
+const torso = (suit, belt) => `
+    <path d="M72,154 Q100,138 128,154 L125,196 Q100,206 75,196 Z" fill="${suit}"/>
+    <rect x="75" y="186" width="50" height="6" rx="3" fill="${belt}"/>`;
+const arm = (id, side, sleeve, glove) => side < 0
+  ? `<g id="${id}"><path d="M78,156 Q64,170 66,186" fill="none" stroke="${sleeve}" stroke-width="12" stroke-linecap="round"/><circle cx="66" cy="189" r="6.5" fill="${glove}"/></g>`
+  : `<g id="${id}"><path d="M122,156 Q136,170 134,186" fill="none" stroke="${sleeve}" stroke-width="12" stroke-linecap="round"/><circle cx="134" cy="189" r="6.5" fill="${glove}"/></g>`;
+
+// Eyes have a white lens and a pupil (pupilL/pupilR) that the engine moves inside it.
+// `lid` colours the closed/happy eye lines: white over a mask, dark over skin.
+function heroFace(mask = '', lid = '#fff', iris = '#1d2340') {
+  const eye = (s, x) => `<g id="eye${s}" data-x="${x}" data-y="108"><ellipse rx="9" ry="10" fill="#fff"/><g id="pupil${s}"><circle r="5.4" fill="${iris}"/><circle cx="-1.8" cy="-2" r="1.9" fill="#fff"/></g></g>`;
+  return `<g id="face">${mask}
+    <ellipse id="blushL" cx="66" cy="130" rx="8" ry="4" fill="#ff8fa6"/>
+    <ellipse id="blushR" cx="134" cy="130" rx="8" ry="4" fill="#ff8fa6"/>
+    <g id="eyesOpen">${eye('L', 82)}${eye('R', 118)}</g>
+    <g id="eyesHappy" fill="none" stroke="${lid}" stroke-width="3.5" stroke-linecap="round"><path d="M74,111 Q82,100 90,111"/><path d="M110,111 Q118,100 126,111"/></g>
+    <g id="eyesSleep" fill="none" stroke="${lid}" stroke-width="3" stroke-linecap="round"><path d="M74,108 Q82,114 90,108"/><path d="M110,108 Q118,114 126,108"/></g>
+    <g id="eyesWow"><circle cx="82" cy="108" r="10.5" fill="#fff"/><circle cx="118" cy="108" r="10.5" fill="#fff"/><circle cx="82" cy="108" r="3.6" fill="${iris}"/><circle cx="118" cy="108" r="3.6" fill="${iris}"/></g>
+    <g id="m_smile"><path d="M93,131 Q100,137 107,131" fill="none" stroke="#4a2a34" stroke-width="2.2" stroke-linecap="round"/></g>
+    <g id="m_grin"><path d="M91,129 Q100,130 109,129 Q107,141 100,141 Q93,141 91,129 Z" fill="#b8384f"/><path d="M95,137 Q100,134 105,137 Q100,141 95,137 Z" fill="#ff9fb2"/></g>
+    <g id="m_o"><ellipse cx="100" cy="135" rx="3.8" ry="4.8" fill="#b8384f"/></g>
+  </g>`;
+}
+
+// ---------- Tether: swings across the screen on a grapple line ----------
+CHARS.tether = { ...HERO,
+  motion: 'swing', tiltPivotX: 140, tiltPivot: -10,
+  defs: skin('#ffe6d2', '#f3c3a0') + grad('suitG', '#3b5291', '#24346a'),
+  body: `
+    <g id="rope"><path d="M140,-12 V64" stroke="#7a6a55" stroke-width="2.4" stroke-linecap="round"/><path d="M140,-12 V64" stroke="#d9cdb4" stroke-width=".9" stroke-dasharray="3 3"/></g>
+    ${legs('url(#suitG)', '#ff8a3d')}${torso('url(#suitG)', '#ff8a3d')}
+    <path d="M100,158 L108,168 L100,178 L92,168 Z" fill="#ff8a3d"/>
+    ${arm('armL', -1, '#2f4378', '#ff8a3d')}
+    <g id="armDown">${arm('armDownI', 1, '#2f4378', '#ff8a3d')}<rect x="127" y="175" width="14" height="8" rx="3" fill="#59607a"/></g>
+    <g id="head">${HEAD}
+      <path d="M56,96 Q52,58 90,56 L96,44 L106,56 L118,46 L120,60 Q148,66 144,96 Q130,74 100,72 Q72,72 56,96 Z" fill="#5a3a26"/>
+      ${heroFace(`<path d="${DOMINO}" fill="#24346a"/><circle cx="82" cy="108" r="12.5" fill="none" stroke="#ff8a3d" stroke-width="3"/><circle cx="118" cy="108" r="12.5" fill="none" stroke="#ff8a3d" stroke-width="3"/>`)}
+    </g>
+    <g id="armUp"><path d="M124,156 Q152,120 140,70" fill="none" stroke="#2f4378" stroke-width="12" stroke-linecap="round"/><rect x="138" y="96" width="14" height="9" rx="3" fill="#59607a" transform="rotate(-12,145,100)"/><circle cx="140" cy="66" r="6.5" fill="#ff8a3d"/></g>`,
+  update(t, S) {
+    const swinging = S.m > .5;
+    attr('rope', 'opacity', clamp(S.m * 1.6 - .4, 0, 1));
+    show('armUp', swinging); show('armDown', !swinging);
+    const kick = Math.sin(S.hop * .55 + .6) * 14 * S.m;
+    attr('legL', 'transform', `rotate(${kick + 8 * S.m},91,192)`);
+    attr('legR', 'transform', `rotate(${kick - 6 * S.m},109,192)`);
+    attr('armL', 'transform', `rotate(${S.m * 35 + Math.abs(S.wave) * 2},78,156)`);
+  }
+};
+
+// ---------- Cirrus: flies fist-first with a streaming cape ----------
+CHARS.cirrus = { ...HERO,
+  motion: 'soar', tiltPivot: 150,
+  defs: skin('#e2ad84', '#c08458') + grad('suitG', '#f6faff', '#bcd4f4') + grad('capeG', '#a483ff', '#6a3fe0'),
+  body: `
+    <path id="cape" fill="url(#capeG)"/>
+    ${legs('url(#suitG)', '#3d7bf0')}${torso('url(#suitG)', '#3d7bf0')}
+    <circle cx="100" cy="168" r="10.5" fill="#3d7bf0"/>
+    <path d="M93,173 Q90,166 96,165 Q98,159 105,161 Q111,163 109,168 Q112,173 106,173 Z" fill="#fff"/>
+    <g id="head">${HEAD}
+      <circle cx="66" cy="76" r="15" fill="#2b2238"/><circle cx="84" cy="62" r="17" fill="#2b2238"/><circle cx="106" cy="58" r="18" fill="#2b2238"/>
+      <circle cx="128" cy="66" r="16" fill="#2b2238"/><circle cx="138" cy="84" r="12" fill="#2b2238"/><circle cx="62" cy="92" r="9" fill="#2b2238"/>
+      ${heroFace(`<path d="${DOMINO}" fill="#6a3fe0"/>`)}
+    </g>
+    ${arm('armL', -1, '#dce8f8', '#3d7bf0')}${arm('armR', 1, '#dce8f8', '#3d7bf0')}`,
+  update(t, S) {
+    const tr = -clamp(S.svx * 1.6, -22, 22), fl = Math.sin(t / (S.m > .5 ? 110 : 420)) * (2 + 5 * S.m), L = 208 + 10 * S.m;
+    attr('cape', 'd', `M78,150 Q100,140 122,150 L${134 + tr + fl},${L} Q${116 + tr},${L + 6 - fl} ${100 + tr},${L} Q${84 + tr},${L - 6 + fl} ${66 + tr - fl},${L} Z`);
+    // Leading fist: the arm on the side it's flying toward.
+    this.r = (this.r ?? 0) + ((S.svx >= 0 ? S.m : 0) - (this.r ?? 0)) * .15;
+    this.l = (this.l ?? 0) + ((S.svx < 0 ? S.m : 0) - (this.l ?? 0)) * .15;
+    attr('armR', 'transform', `rotate(${-125 * this.r - Math.abs(S.wave)},122,156)`);
+    attr('armL', 'transform', `rotate(${125 * this.l + Math.abs(S.wave)},78,156)`);
+    const dangle = Math.sin(t / 300) * 6 * S.m;
+    attr('legL', 'transform', `rotate(${dangle},91,192)`);
+    attr('legR', 'transform', `rotate(${-dangle},109,192)`);
+  }
+};
+
+// ---------- Volta: spins a storm staff overhead, crackling with sparks ----------
+CHARS.volta = { ...HERO,
+  motion: 'fly', tiltK: .8, tiltPivot: 150,
+  defs: skin('#fbe0c6', '#e8b88f') + grad('suitG', '#8463f2', '#4d2fb0') +
+    '<radialGradient id="orb"><stop offset="0" stop-color="#fffbe0"/><stop offset="1" stop-color="#ffd23f"/></radialGradient>',
+  body: `
+    ${legs('url(#suitG)', '#ffd23f')}${torso('url(#suitG)', '#ffd23f')}
+    <path d="M100,157 L103,166 L112,169 L103,172 L100,181 L97,172 L88,169 L97,166 Z" fill="#ffd23f"/>
+    <g id="head">${HEAD}
+      <path d="M56,98 L46,66 L68,76 L70,50 L88,68 L100,42 L112,68 L130,50 L132,76 L154,66 L144,98 Q130,74 100,72 Q70,74 56,98 Z" fill="#ffd23f"/>
+      ${heroFace(`<path d="${DOMINO}" fill="#4d2fb0" stroke="#ffd23f" stroke-width="2"/>`)}
+    </g>
+    ${arm('armL', -1, '#6a4bd6', '#ffd23f')}${arm('armR', 1, '#6a4bd6', '#ffd23f')}
+    <g id="staff"><rect x="-2.5" y="-38" width="5" height="76" rx="2.5" fill="#d3d7ea"/><rect x="-3.5" y="-8" width="7" height="16" rx="2" fill="#4d2fb0"/>
+      <circle cy="-40" r="6" fill="url(#orb)" filter="url(#glow)"/><circle cy="40" r="6" fill="url(#orb)" filter="url(#glow)"/></g>
+    <g fill="none" stroke="#fff27a" stroke-width="2" stroke-linejoin="round" filter="url(#glow)"><path id="zap1"/><path id="zap2"/></g>`,
+  update(t, S) {
+    const m = S.m;
+    this.ang = (this.ang ?? 0) + m * 24;
+    if (m < .2) this.ang += (Math.round(this.ang / 180) * 180 - this.ang) * .2;
+    const sx = 140 - 40 * m, sy = 182 - 146 * m, k = 1 - .38 * m;
+    attr('staff', 'transform', `translate(${sx},${sy}) rotate(${this.ang}) scale(${k})`);
+    attr('armR', 'transform', `rotate(${-125 * m},122,156)`);
+    attr('armL', 'transform', `rotate(${Math.abs(S.wave) * 2 + Math.sin(t / 500) * 3},78,156)`);
+    const bolt = (x1, y1, x2, y2) => {
+      let d = `M${x1},${y1}`;
+      for (let i = 1; i < 6; i++) d += ` L${x1 + (x2 - x1) * i / 6 + (Math.random() - .5) * 10},${y1 + (y2 - y1) * i / 6 + (Math.random() - .5) * 10}`;
+      return d + ` L${x2},${y2}`;
+    };
+    const a = this.ang * Math.PI / 180, tx = sx + 40 * k * Math.sin(a), ty = sy - 40 * k * Math.cos(a);
+    attr('zap1', 'd', m > .5 && Math.random() < .7 ? bolt(140, 128, sx, sy) : '');
+    attr('zap2', 'd', m > .5 && Math.random() < .5 ? bolt(tx, ty, tx + (Math.random() - .5) * 36, ty + (Math.random() - .5) * 36) : '');
+  }
+};
+
+// ---------- Gust: super-speed sprint with whirling legs and speed lines ----------
+CHARS.gust = { ...HERO,
+  motion: 'dash', tiltPivot: 200,
+  defs: skin('#9a6646', '#764628') + grad('suitG', '#25cbb6', '#0f8a7c'),
+  body: `
+    <g id="streaks" stroke="#9fe9df" stroke-width="3" stroke-linecap="round"><path id="sk1"/><path id="sk2"/><path id="sk3"/></g>
+    <ellipse id="wheel" cx="100" cy="208" rx="24" ry="15" fill="none" stroke="#25cbb6" stroke-width="5" stroke-dasharray="10 8"/>
+    ${legs('url(#suitG)', '#fff')}${torso('url(#suitG)', '#fff')}
+    <path d="M88,162 H108 M92,170 H114 M88,178 H106" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+    <g id="head">${HEAD}
+      <path d="M54,100 Q52,54 100,54 Q148,54 146,100 Q140,82 120,80 Q100,78 80,80 Q60,82 54,100 Z" fill="url(#suitG)"/>
+      <path d="M72,64 Q102,50 140,76" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+      ${heroFace('<path d="M58,102 L38,92 Q64,86 100,97 Q136,86 162,92 L142,102 Q148,118 136,124 Q116,128 100,118 Q84,128 64,124 Q52,118 58,102 Z" fill="#0f6f64"/>')}
+    </g>
+    ${arm('armL', -1, '#1aa897', '#fff')}${arm('armR', 1, '#1aa897', '#fff')}`,
+  update(t, S) {
+    const m = S.m, dir = S.svx < 0 ? -1 : 1, ph = S.hop * 1.6;
+    attr('legL', 'transform', `rotate(${Math.sin(ph) * 55 * m},91,192)`);
+    attr('legR', 'transform', `rotate(${-Math.sin(ph) * 55 * m},109,192)`);
+    attr('armL', 'transform', `rotate(${-Math.sin(ph) * 45 * m + Math.abs(S.wave) * 2},78,156)`);
+    attr('armR', 'transform', `rotate(${-Math.sin(ph) * 45 * m - Math.abs(S.wave) * 2},122,156)`);
+    attr('wheel', 'opacity', m * .55);
+    attr('wheel', 'stroke-dashoffset', t * .4 * dir);
+    attr('streaks', 'opacity', m);
+    [120, 150, 180].forEach((y, i) => {
+      const x0 = 100 - dir * (52 + i * 4), len = 18 + Math.random() * 26;
+      attr('sk' + (i + 1), 'd', `M${x0},${y} H${x0 - dir * len}`);
+    });
+  }
+};
+
+// ---------- Rumble: giant leaps that land with a ground-shaking smash ----------
+CHARS.rumble = { ...HERO,
+  motion: 'leap', tiltPivot: 224, faceShift: [6, 4], turn: 3,
+  defs: skin('#d9a07a', '#b57650') + grad('suitG', '#66789f', '#3b4769') + grad('steel', '#f1f4f9', '#9ba7bd'),
+  body: `
+    <g id="legL"><rect x="78" y="188" width="19" height="28" rx="8" fill="url(#suitG)"/><rect x="74" y="211" width="26" height="13" rx="5" fill="url(#steel)"/></g>
+    <g id="legR"><rect x="103" y="188" width="19" height="28" rx="8" fill="url(#suitG)"/><rect x="100" y="211" width="26" height="13" rx="5" fill="url(#steel)"/></g>
+    <path d="M62,156 Q100,134 138,156 L133,198 Q100,210 67,198 Z" fill="url(#suitG)"/>
+    <path d="M86,180 L96,164 L102,172 L107,166 L116,180 Z" fill="#ffb020"/>
+    <rect x="68" y="188" width="64" height="7" rx="3.5" fill="#ffb020"/>
+    <g id="head">${HEAD}
+      <path d="M52,106 Q48,54 100,52 Q152,54 148,106 L140,104 Q138,84 120,80 Q100,77 80,80 Q62,84 60,104 Z" fill="url(#suitG)"/>
+      <path d="M92,54 Q100,44 108,54 L106,79 H94 Z" fill="#ffb020"/>
+      ${heroFace('', '#4a2a34')}
+    </g>
+    <g id="armL"><path d="M66,164 Q56,176 54,186" fill="none" stroke="#4d5c80" stroke-width="14" stroke-linecap="round"/><circle cx="66" cy="158" r="13" fill="url(#suitG)"/>
+      <circle cx="52" cy="192" r="13" fill="url(#steel)"/><path d="M44,186 h14 M43,192 h16" stroke="#8a95ab" stroke-width="1.5" stroke-linecap="round"/></g>
+    <g id="armR"><path d="M134,164 Q144,176 146,186" fill="none" stroke="#4d5c80" stroke-width="14" stroke-linecap="round"/><circle cx="134" cy="158" r="13" fill="url(#suitG)"/>
+      <circle cx="148" cy="192" r="13" fill="url(#steel)"/><path d="M142,186 h14 M141,192 h16" stroke="#8a95ab" stroke-width="1.5" stroke-linecap="round"/></g>`,
+  update(t, S) {
+    // Fists go up while airborne and come down with the landing.
+    const a = S.air, w = Math.abs(S.wave) * 2;
+    attr('armL', 'transform', `rotate(${a * 140 + w},66,158)`);
+    attr('armR', 'transform', `rotate(${-a * 140 - w},134,158)`);
+    attr('legL', 'transform', `translate(0,${-a * 6})`);
+    attr('legR', 'transform', `translate(0,${-a * 6})`);
+  }
+};
+
+// ---------- Aegis: hurls a round shield that boomerangs back ----------
+CHARS.aegis = { ...HERO,
+  motion: 'hop', tiltPivot: 200,
+  defs: skin('#f0c8a0', '#d39f74') + grad('suitG', '#3ab47e', '#1f7a52') + grad('bronze', '#ffd08a', '#c27a2c'),
+  body: `
+    ${legs('url(#suitG)', '#c27a2c')}${torso('url(#suitG)', '#c27a2c')}
+    <circle cx="100" cy="168" r="5.5" fill="#ffd08a"/>
+    <path d="M100,157 V160 M100,176 V179 M89,168 H92 M108,168 H111 M92,160 L94,162 M108,176 L106,174 M92,176 L94,174 M108,160 L106,162" stroke="#ffd08a" stroke-width="2.2" stroke-linecap="round"/>
+    ${arm('armR', 1, '#2a9466', '#c27a2c')}
+    <g id="head">
+      <path d="M64,72 Q70,26 100,24 Q130,26 136,72 Q100,52 64,72 Z" fill="#ffcf5a"/>
+      <path d="M80,40 L84,60 M100,30 V56 M120,40 L116,60" stroke="#e8a92a" stroke-width="2.5" stroke-linecap="round"/>
+      ${HEAD}
+      <path d="M52,112 Q48,56 100,54 Q152,56 148,112 L138,114 Q140,86 122,80 Q100,76 78,80 Q60,86 62,114 Z" fill="url(#bronze)"/>
+      <path d="M62,74 Q100,56 138,74" fill="none" stroke="#fff3d6" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+      ${heroFace('', '#4a2a34')}
+    </g>
+    ${arm('armL', -1, '#2a9466', '#c27a2c')}
+    <g id="shield"><circle r="23" fill="url(#bronze)" stroke="#9a5a1c" stroke-width="2.5"/><circle r="16" fill="none" stroke="#fff3d6" stroke-width="2" opacity=".7"/>
+      <circle r="5.5" fill="#fff3d6"/><path d="M0,-13 V-9 M0,13 V9 M-13,0 H-9 M13,0 H9 M-9,-9 L-6.5,-6.5 M9,9 L6.5,6.5 M-9,9 L-6.5,6.5 M9,-9 L6.5,-6.5" stroke="#fff3d6" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M-17,-11 A20,20 0 0 1 -5,-19.5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/></g>`,
+  update(t, S) {
+    // While travelling, throw the shield ahead on a loop and catch it again.
+    if (S.speed > .8 && t - (this.ts ?? -1e9) > 1300) { this.ts = t; this.dir = S.svx < 0 ? -1 : 1; }
+    const p = (t - (this.ts ?? -1e9)) / 950;
+    let x = 64, y = 184, r = 0, k = 1;
+    if (p < 1) {
+      const s = Math.sin(Math.PI * p);
+      x = 64 + (100 + this.dir * 78 - 64) * s;
+      y = 184 - 60 * s - 22 * Math.sin(2 * Math.PI * p);
+      r = p * 1080 * this.dir;
+      k = 1 - .25 * s;
+    }
+    attr('shield', 'transform', `translate(${x},${y}) rotate(${r}) scale(${k})`);
+    attr('armL', 'transform', `rotate(${p < 1 ? -70 * Math.sin(Math.PI * Math.min(1, p * 2.5)) : 0},78,156)`);
+    attr('armR', 'transform', `rotate(${-Math.abs(S.wave) * 2},122,156)`);
   }
 };
 
@@ -328,8 +555,9 @@ const S = {
   mx: 100, my: -400, s: 1, vx: 0, vy: 0,      // raw input from native side
   cx: 0, cy: 0, svx: 0, svy: 0, speed: 0,     // smoothed gaze / velocity
   hop: 0, ry: 0, wave: 0, sleeping: false, cheering: false,
+  m: 0, air: 0, leapP: 0,                     // smoothed "travelling" 0..1, leap airtime, leap phase
 };
-let ch, eyeBase = {};
+let ch, eyeBase = {}, eyeGaze = {}, glance = [0, 0], nextGlance = 0;
 let lastMove = performance.now(), lastT = 0, lastKey = '';
 let dragging = false, dragStart = 0, cheerStart = -1e9, boopStart = -1e9;
 let blinkStart = -1e9, nextBlink = performance.now() + 1500, lastZ = 0, blush = .5;
@@ -340,9 +568,11 @@ window.setCharacter = key => {
   particles.length = 0;
   $('stage').innerHTML = `<defs>${COMMON_DEFS}${ch.defs}</defs>
     <ellipse id="shadow" cx="100" cy="232" rx="38" ry="6" fill="url(#${ch.shadow === 'glow' ? 'shadowGlow' : 'shadowDark'})"/>
+    <g id="fxGround"></g>
     <g id="root">${ch.body}<g id="fx"></g></g>`;
   eyeBase = {};
   for (const id of ['eyeL', 'eyeR']) eyeBase[id] = [+$(id).dataset.x, +$(id).dataset.y];
+  eyeGaze = { L: [0, 0], R: [0, 0] };
 };
 
 // Native side sends: cursor in viewBox units, flight velocity (points/frame, y down), points per unit.
@@ -376,6 +606,27 @@ function spawnZ() {
   $('fx').appendChild(el);
   particles.push({ el, x: ch.zAt[0], y: ch.zAt[1], drift: 18, rise: 45, born: performance.now(), life: 2600, scale: 1 });
 }
+// Landing impact: a shockwave ring and flying pebbles on the ground.
+function smash() {
+  const g = $('fxGround'), now = performance.now();
+  const ring = document.createElementNS(SVGNS, 'ellipse');
+  for (const [k, v] of [['cx', 100], ['cy', 226], ['fill', 'none'], ['stroke', '#ffb020'], ['stroke-width', 3]]) ring.setAttribute(k, v);
+  g.appendChild(ring);
+  particles.push({ el: ring, born: now, life: 480, step(a) {
+    ring.setAttribute('rx', 24 + a * 70); ring.setAttribute('ry', 4 + a * 9); ring.setAttribute('opacity', 1 - a);
+  } });
+  for (let i = 0; i < 6; i++) {
+    const r = document.createElementNS(SVGNS, 'path');
+    r.setAttribute('d', 'M-3,-2 L2,-3 L3,2 L-1,3 Z');
+    r.setAttribute('fill', '#9aa3b5');
+    g.appendChild(r);
+    const vx = (i - 2.5) * 14 + (Math.random() - .5) * 8, vy = 40 + Math.random() * 25;
+    particles.push({ el: r, born: now, life: 520, step(a) {
+      r.setAttribute('transform', `translate(${100 + vx * a},${224 - vy * a + 70 * a * a}) rotate(${a * 300})`);
+      r.setAttribute('opacity', 1 - a * a);
+    } });
+  }
+}
 
 function frame(t) {
   const dt = Math.min(50, t - (lastT || t));
@@ -383,17 +634,27 @@ function frame(t) {
   S.sleeping = !dragging && t - lastMove > 30000;
   S.cheering = t - cheerStart < 1300;
 
-  // Gaze: direction to the cursor, saturating with distance.
+  // Gaze: direction to the cursor, saturating with distance. The head follows slowly;
+  // the eyes (below) lead with quick, saccade-like moves, the way real eyes do.
   const dx = (S.mx - ch.face.x) * S.s, dy = (S.my - ch.face.y) * S.s;
   const d = Math.hypot(dx, dy) || 1, f = d / (d + 140);
   const near = d / S.s < 80;
-  S.cx += ((S.sleeping ? 0 : dx / d * f) - S.cx) * .18;
-  S.cy += ((S.sleeping ? .3 : dy / d * f) - S.cy) * .18;
+  S.cx += ((S.sleeping ? 0 : dx / d * f) - S.cx) * .07;
+  S.cy += ((S.sleeping ? .3 : dy / d * f) - S.cy) * .07;
   S.svx += (S.vx - S.svx) * .2;
   S.svy += (S.vy - S.svy) * .2;
   S.speed = Math.hypot(S.svx, S.svy);
   const moving = S.speed > .5;
   if (moving) S.hop += dt * .013 * Math.min(1.5, .6 + S.speed / 12);
+  S.m += ((moving ? 1 : 0) - S.m) * .1;
+
+  // While the cursor rests, the eyes glance around a little now and then.
+  const resting = t - lastMove > 1200 && !S.sleeping && !dragging;
+  if (!resting) glance = [0, 0];
+  else if (t > nextGlance) {
+    glance = Math.random() < .4 ? [0, 0] : [(Math.random() - .5) * .6, (Math.random() - .5) * .35];
+    nextGlance = t + 700 + Math.random() * 1800;
+  }
 
   // Blink, with the occasional double blink.
   if (t > nextBlink) {
@@ -409,11 +670,24 @@ function frame(t) {
   const mouth = S.cheering ? 'grin' : dragging ? 'o' : (near && !S.sleeping) ? 'grin' : 'smile';
   for (const m of ['smile', 'grin', 'o']) show('m_' + m, m === mouth);
 
-  // Eyes blink and the far-side eye narrows a touch when looking sideways.
-  const lean = 1 - Math.abs(S.cx) * .12;
-  const [lx, ly] = eyeBase.eyeL, [rx, ryy] = eyeBase.eyeR;
-  attr('eyeL', 'transform', `translate(${lx},${ly}) scale(${S.cx < 0 ? 1 : lean},${open})`);
-  attr('eyeR', 'transform', `translate(${rx},${ryy}) scale(${S.cx > 0 ? 1 : lean},${open})`);
+  // Each eye aims at the cursor on its own (so they converge when it's close), blinks,
+  // and the far-side eye narrows a touch when looking sideways. Characters with
+  // pupilL/pupilR move just the pupil inside the eye; the rest move the whole eye.
+  const lean = 1 - Math.abs(S.cx) * .12, em = ch.eyeMove || [3.5, 3];
+  for (const [s, far] of [['L', S.cx > 0], ['R', S.cx < 0]]) {
+    const [bx, by] = eyeBase['eye' + s], g = eyeGaze[s];
+    const ex = (S.mx - bx) * S.s, ey = (S.my - by) * S.s, ed = Math.hypot(ex, ey) || 1, ef = ed / (ed + 90);
+    g[0] += ((S.sleeping ? 0 : ex / ed * ef + glance[0]) - g[0]) * .35;
+    g[1] += ((S.sleeping ? 0 : ey / ed * ef + glance[1]) - g[1]) * .35;
+    const ox = clamp(g[0], -1, 1) * em[0], oy = clamp(g[1], -1, 1) * em[1];
+    const sc = `scale(${far ? lean : 1},${open})`, pupil = $('pupil' + s);
+    if (pupil) {
+      attr('eye' + s, 'transform', `translate(${bx},${by}) ${sc}`);
+      pupil.setAttribute('transform', `translate(${ox},${oy})`);
+    } else {
+      attr('eye' + s, 'transform', `translate(${bx + ox},${by + oy}) ${sc}`);
+    }
+  }
 
   blush += (((S.cheering || near) ? .85 : .4) - blush) * .08;
   attr('blushL', 'opacity', blush);
@@ -450,8 +724,35 @@ function frame(t) {
       tilt = clamp(S.svx * .5, -6, 6);
       break;
     }
+    case 'swing':   // hangs from a line above and swings like a pendulum while travelling
+      y = Math.sin(t / 800) * 1.5 * (1 - S.m);
+      tilt = S.m * (clamp(S.svx * .9, -8, 8) + Math.sin(S.hop * .55) * 6);
+      break;
+    case 'soar':    // leans into the direction of travel, up to almost horizontal
+      y = Math.sin(t / 700) * 3;
+      tilt = clamp(S.svx * 3.6, -50, 50);
+      break;
+    case 'dash':    // leans forward from the feet with a fast running bounce
+      y = moving ? -Math.abs(Math.sin(S.hop * 1.6)) * 3 : 0;
+      tilt = clamp(S.svx * 2.2, -20, 20);
+      sy = 1 + breathe;
+      break;
+    case 'leap': {  // crouch, big airborne arc, smash landing
+      const p = (S.hop / 11) % 1;
+      let air = 0;
+      if (moving) {
+        if (p < .18) { const c = Math.sin(p / .18 * Math.PI); sy = 1 - c * .12; sx = 1 + c * .08; }
+        else if (p < .82) { const q = (p - .18) / .64; y = -46 * 4 * q * (1 - q); air = Math.sin(q * Math.PI); sy = 1.04; sx = .97; }
+        else { const c = Math.sin((p - .82) / .18 * Math.PI); sy = 1 - c * .16; sx = 1 + c * .12; }
+        if (S.leapP < .82 && p >= .82) smash();
+      } else { sy = 1 + breathe; sx = 2 - sy; }
+      S.leapP = moving ? p : 0;
+      S.air += (air - S.air) * .3;
+      tilt = clamp(S.svx * .5, -8, 8);
+      break;
+    }
   }
-  S.ry += (y - S.ry) * .35;
+  S.ry += (y - S.ry) * (ch.motion === 'leap' ? .6 : .35);
 
   // Shared reactions: hop + wave on cheer, squish on boop, dangle while dragged.
   const cp = (t - cheerStart) / 1300;
@@ -461,7 +762,7 @@ function frame(t) {
   if (bp < 1) { const k = Math.sin(bp * Math.PI) * (1 - bp); sx *= 1 + k * .07; sy *= 1 - k * .08; }
   if (dragging) tilt += Math.sin((t - dragStart) / 130) * 6;
   attr('root', 'transform',
-    `translate(0,${S.ry + jump}) rotate(${tilt},100,${ch.tiltPivot}) translate(100,${ch.base}) scale(${sx},${sy}) translate(-100,-${ch.base})`);
+    `translate(0,${S.ry + jump}) rotate(${tilt},${ch.tiltPivotX ?? 100},${ch.tiltPivot}) translate(100,${ch.base}) scale(${sx},${sy}) translate(-100,-${ch.base})`);
   const lift = S.ry + jump;
   attr('shadow', 'transform', `translate(100,232) scale(${dragging ? .55 : 1 + lift * .015}) translate(-100,-232)`);
 
@@ -474,6 +775,7 @@ function frame(t) {
     const a = (t - p.born) / p.life;
     if (a < 0) continue;
     if (a >= 1) { p.el.remove(); particles.splice(i, 1); continue; }
+    if (p.step) { p.step(a); continue; }
     const x = p.x + p.drift * a + Math.sin(a * 9) * 3, py = p.y - p.rise * a;
     p.el.setAttribute('transform', `translate(${x},${py}) scale(${p.scale * (.6 + a * .6)})`);
     p.el.setAttribute('opacity', a < .15 ? a / .15 : 1 - (a - .15) / .85);
@@ -482,7 +784,10 @@ function frame(t) {
   requestAnimationFrame(frame);
 }
 
-setCharacter(window.initialChar || location.hash.slice(1) || 'bot');
+// Preview only (gallery.html): "#key:move" shows a character travelling right.
+const [hashKey, hashMode] = location.hash.slice(1).split(':');
+setCharacter(window.initialChar || hashKey || 'bot');
+if (hashMode === 'move') setInterval(() => look(400, 60, 9, -1, 1), 16);
 requestAnimationFrame(frame);
 </script>
 </body>

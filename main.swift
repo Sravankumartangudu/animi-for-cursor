@@ -66,6 +66,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ("bot", "🤖  Bolt — robot"), ("cat", "🐱  Mochi — cat"), ("ghost", "👻  Boo — ghost"),
         ("slime", "💧  Jelly — slime"), ("penguin", "🐧  Pip — penguin"), ("panda", "🐼  Bao — panda"),
     ]
+    private let heroes: [(key: String, name: String)] = [
+        ("tether", "🪝  Tether — grapple swinger"), ("cirrus", "☁️  Cirrus — caped flyer"),
+        ("volta", "⚡  Volta — storm staff"), ("gust", "💨  Gust — speedster"),
+        ("rumble", "⛰️  Rumble — ground smasher"), ("aegis", "🛡️  Aegis — shield thrower"),
+    ]
     private let defaults = UserDefaults.standard
 
     private var width: CGFloat {
@@ -181,17 +186,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func buildMenu() {
         menu.removeAllItems()
-        let charItem = NSMenuItem(title: "Character", action: nil, keyEquivalent: "")
-        let charMenu = NSMenu()
-        for (i, c) in characters.enumerated() {
-            let item = NSMenuItem(title: c.name, action: #selector(setCharacter(_:)), keyEquivalent: "")
-            item.tag = i
-            item.target = self
-            item.state = c.key == character ? .on : .off
-            charMenu.addItem(item)
+        for (title, list) in [("Character", characters), ("Heroes", heroes)] {
+            let groupItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            let groupMenu = NSMenu()
+            for c in list {
+                let item = NSMenuItem(title: c.name, action: #selector(setCharacter(_:)), keyEquivalent: "")
+                item.representedObject = c.key
+                item.target = self
+                item.state = c.key == character ? .on : .off
+                groupMenu.addItem(item)
+            }
+            groupItem.submenu = groupMenu
+            menu.addItem(groupItem)
         }
-        charItem.submenu = charMenu
-        menu.addItem(charItem)
 
         let sizeItem = NSMenuItem(title: "Size", action: nil, keyEquivalent: "")
         let sizeMenu = NSMenu()
@@ -220,7 +227,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func sayHi() { js("cheer()") }
 
     @objc private func setCharacter(_ sender: NSMenuItem) {
-        character = characters[sender.tag].key
+        guard let key = sender.representedObject as? String else { return }
+        character = key
         js("setCharacter('\(character)'); cheer()")
         buildMenu()
     }

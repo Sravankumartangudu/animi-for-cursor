@@ -30,6 +30,23 @@ A tiny desktop companion for macOS. Pick a character, and it watches your cursor
 | 🐧 | **Pip** | waddling | flapping flippers, scarf |
 | 🐼 | **Bao** | hopping | bamboo stalk, wiggling ears |
 
+### Heroes
+
+Six original superheroes, in their own **Heroes** menu. Each one does its signature move while it travels after your cursor.
+
+![Hero moves](docs/hero-moves.png)
+
+| | Name | Signature move |
+|---|---|---|
+| 🪝 | **Tether** | Swings across the screen on a grapple line, legs kicking |
+| ☁️ | **Cirrus** | Flies fist-first, leaning into the turn, with a streaming cape |
+| ⚡ | **Volta** | Spins a storm staff overhead that crackles with sparks |
+| 💨 | **Gust** | Super-speed sprint with whirling legs and speed lines |
+| ⛰️ | **Rumble** | Giant leaps that land with a shockwave and flying pebbles |
+| 🛡️ | **Aegis** | Throws a round shield that boomerangs back to the hand |
+
+All characters and heroes are original designs. They aren't based on any comic, film or game character.
+
 ## Requirements
 
 - A Mac running macOS 13 (Ventura) or later.
@@ -93,14 +110,14 @@ You can also double-click **Animi** in your Applications folder or find it with 
 | Make it follow you | Just move the mouse. It travels toward the cursor and stops a little short so it never covers what you're clicking. |
 | Move it somewhere | Click and drag the character. |
 | Keep it in one place | Right-click → turn off **Follow Cursor**, then drag it where you want. It stays there, even after a restart. |
-| Change the character | Right-click → **Character** → pick one. |
+| Change the character | Right-click → **Character** or **Heroes** → pick one. |
 | Make it smaller or bigger | Right-click → **Size** → Tiny / Small / Medium / Large. |
 | Get a reaction | **Click** = squish and blink. **Double-click** = hearts and a happy hop. |
 | Quit | Right-click → **Quit Animi**. |
 
 Things it does on its own:
 
-- Watches the cursor anywhere on screen with its eyes and head.
+- Watches the cursor anywhere on screen. The eyes move first and the head turns after them, and while the cursor rests the eyes glance around now and then.
 - Blinks, breathes and bobs.
 - Blushes and grins when your cursor comes close.
 - Makes a surprised face while you're dragging it.
@@ -112,6 +129,7 @@ Things it does on its own:
 | Item | What it does |
 |---|---|
 | **Character** | Switch between Bolt, Mochi, Boo, Jelly, Pip and Bao. |
+| **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis. |
 | **Follow Cursor** | On: it travels after the cursor. Off: it stays where you put it, but still watches the cursor. |
 | **Size** | Tiny, Small (default), Medium or Large. |
 | **Say Hi ♥** | Plays the happy animation. |
@@ -188,7 +206,7 @@ After changing anything, run `./build.sh` and reopen the app.
 
 **Change colors:** each character's colors are near the top of its entry in `CHARS` in `animi.html`. For example, Bolt's eyes are `#5ef2ff` and Mochi's fur is the `ginger` gradient.
 
-**Add a new character:** add an entry to `CHARS` in `animi.html` that uses the shared element ids (`root`, `head`, `face`, `eyeL`/`eyeR`, `eyesHappy`, `eyesSleep`, `eyesWow`, `m_smile`, `m_grin`, `m_o`, `blushL`, `blushR`). Then add it to the `characters` list in `main.swift`.
+**Add a new character:** add an entry to `CHARS` in `animi.html` that uses the shared element ids (`root`, `head`, `face`, `eyeL`/`eyeR`, `eyesHappy`, `eyesSleep`, `eyesWow`, `m_smile`, `m_grin`, `m_o`, `blushL`, `blushR`). Then add it to the `characters` or `heroes` list in `main.swift`. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Contributing
 
