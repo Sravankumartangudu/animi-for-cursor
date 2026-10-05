@@ -4,6 +4,7 @@
 
 - Six fan-art heroes in the **Heroes** menu, below the originals, each doing their famous move: Spider-Man (web swing), Iron Man (thruster flight), Superman (fist-first flight), Batman (cape glide, a new motion), Hulk (leap and smash) and Captain America (shield throw). These are unofficial fan art; see the trademark notice in the README.
 - New app icon: Bolt watching a cursor.
+- Fix: the character no longer moves away while its right-click menu is open, so menu items are easy to pick.
 
 ## 1.1 — 2026-10-06
 
