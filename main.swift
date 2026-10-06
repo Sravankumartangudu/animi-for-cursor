@@ -9,7 +9,6 @@ final class OverlayView: NSView {
     private var downOrigin = NSPoint.zero
     private var moved = false
     private(set) var isHeld = false
-    private(set) var isShowingMenu = false
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
@@ -44,18 +43,16 @@ final class OverlayView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         guard let menu = app?.menu else { return }
-        // Hold still while the menu is open (popUp blocks until it closes) so the
-        // menu doesn't drift away as the cursor moves toward an item.
-        isShowingMenu = true
         NSMenu.popUpContextMenu(menu, with: event, for: self)
-        isShowingMenu = false
     }
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var window: NSPanel!
     private var web: WKWebView!
     let menu = NSMenu()
+    private var statusItem: NSStatusItem!
+    private var isMenuOpen = false
     private var overlay: OverlayView!
     private var timer: Timer?
     private var lastSent = ""
@@ -123,7 +120,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView = content
 
         loadCharacter()
+        menu.delegate = self
         buildMenu()
+        // Menu bar icon that opens the same menu as right-clicking the character.
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = statusItem.button {
+            let icon = Bundle.main.image(forResource: "AppIcon") ?? NSImage(systemSymbolName: "face.smiling", accessibilityDescription: nil)
+            icon?.size = NSSize(width: 18, height: 18)
+            button.image = icon
+            button.toolTip = "Animi"
+        }
+        statusItem.menu = menu
         window.orderFrontRegardless()
 
         let t = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
@@ -147,7 +154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func tick() {
         let m = NSEvent.mouseLocation
-        if follow && !overlay.isHeld && !overlay.isShowingMenu { fly(toward: m) } else { velocity = .zero }
+        if follow && !overlay.isHeld && !isMenuOpen { fly(toward: m) } else { velocity = .zero }
 
         // Tell the character where the cursor is (svg viewBox units, y down) and how fast it's moving.
         let f = window.frame
@@ -195,6 +202,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: Menu
+
+    // Hold still while the menu is open (from the character or the menu bar)
+    // so the character doesn't chase the cursor as it moves toward an item.
+    func menuWillOpen(_ menu: NSMenu) { isMenuOpen = true }
+    func menuDidClose(_ menu: NSMenu) { isMenuOpen = false }
 
     private func buildMenu() {
         menu.removeAllItems()

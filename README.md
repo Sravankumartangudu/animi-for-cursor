@@ -120,7 +120,7 @@ open /Applications/Animi.app
 
 You can also double-click **Animi** in your Applications folder or find it with Spotlight. A small robot appears near the bottom-right of your screen. Move your mouse and it starts following you. 🎉
 
-> Animi doesn't add a Dock icon or a menu-bar icon. To get its menu, right-click the character.
+> Animi doesn't add a Dock icon. To get its menu, right-click the character or click the Animi icon in the menu bar.
 
 ## How to use
 
@@ -132,7 +132,7 @@ You can also double-click **Animi** in your Applications folder or find it with 
 | Change the character | Right-click → **Character** or **Heroes** → pick one. |
 | Make it smaller or bigger | Right-click → **Size** → Tiny / Small / Medium / Large. |
 | Get a reaction | **Click** = squish and blink. **Double-click** = hearts and a happy hop. |
-| Quit | Right-click → **Quit Animi**. |
+| Quit | Right-click (or click the menu bar icon) → **Quit Animi**. |
 
 Things it does on its own:
 
@@ -144,6 +144,8 @@ Things it does on its own:
 - Stays above other windows and appears on every desktop (Space), including full-screen apps.
 
 ## Right-click menu
+
+The same menu opens when you right-click the character or click the Animi icon in the menu bar.
 
 | Item | What it does |
 |---|---|
@@ -172,11 +174,11 @@ rm -rf /Applications/Animi.app && mv Animi.app /Applications/
 open /Applications/Animi.app
 ```
 
-If you downloaded a ZIP instead of using git, download the new ZIP and repeat steps 3 to 5 of [Install](#install). Quit Animi first (right-click → **Quit Animi**).
+If you downloaded a ZIP instead of using git, download the new ZIP and repeat steps 3 to 5 of [Install](#install). Quit Animi first (right-click or menu bar icon → **Quit Animi**).
 
 ## Uninstall
 
-1. Right-click the character → **Quit Animi**.
+1. Right-click the character (or click the menu bar icon) → **Quit Animi**.
 2. Delete the app and its saved settings:
 
 ```sh

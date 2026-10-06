@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4 — 2026-10-06
+
+- Menu bar icon: click it to open the same menu as right-clicking the character. This helps when the character is hidden behind a window.
+- The character holds still while the menu is open from the menu bar, too.
+
 ## 1.3 — 2026-10-06
 
 - Two more fan-art heroes: Doctor Strange (levitates and casts spinning spell circles inside a sparking portal) and Ant-Man (shrinks to ant size with a burst of sparks, sprints, then grows back).
