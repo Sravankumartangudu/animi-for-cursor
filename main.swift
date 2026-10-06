@@ -81,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ("spidey", "🕷️  Spider-Man — web swing"), ("ironman", "🔥  Iron Man — thruster flight"),
         ("superman", "🦸  Superman — flight"), ("batman", "🦇  Batman — cape glide"),
         ("hulk", "💪  Hulk — smash"), ("cap", "⭐  Captain America — shield throw"),
+        ("strange", "🔮  Doctor Strange — spell circles"), ("antman", "🐜  Ant-Man — shrink & sprint"),
     ]
     private let defaults = UserDefaults.standard
 

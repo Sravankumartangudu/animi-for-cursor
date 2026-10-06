@@ -734,6 +734,80 @@ CHARS.cap = { ...HERO,
   update(t, S) { shieldThrow(this, t, S); }
 };
 
+// Doctor Strange's spell circle, drawn around (0,0).
+const MANDALA = `<g fill="none" stroke="#ffa53a" stroke-width="1.6" filter="url(#glow)">
+    <circle r="15"/><circle r="10.5" stroke-dasharray="2 2"/><rect x="-8" y="-8" width="16" height="16"/><rect x="-8" y="-8" width="16" height="16" transform="rotate(45)"/><circle r="3"/></g>`;
+
+// ---------- Doctor Strange: levitates and casts spinning spell circles ----------
+CHARS.strange = { ...HERO,
+  motion: 'fly', tiltK: .5, tiltPivot: 150,
+  defs: skin('#f3cfb0', '#d9a882') + grad('suitG', '#2c3f8f', '#1a2560') + grad('capeG', '#e0323a', '#9c1420'),
+  body: `
+    <circle id="portal" cx="100" cy="128" r="60" fill="none" stroke="#ffa53a" stroke-width="4" stroke-dasharray="2 6" stroke-linecap="round" filter="url(#glow)"/>
+    <path id="cape" fill="url(#capeG)"/>
+    ${legs('#1f2b66', '#4a3a30')}${torso('url(#suitG)', '#c99a3a')}
+    <path d="M80,156 L100,186 L120,156" fill="none" stroke="#c99a3a" stroke-width="3"/>
+    <circle cx="100" cy="164" r="6.5" fill="#d9a520" stroke="#8a6410" stroke-width="1.2"/>
+    <ellipse id="agamotto" cx="100" cy="164" rx="3.6" ry="2.4" fill="#5cff8a" filter="url(#glow)"/>
+    <g id="head">${HEAD}
+      <path d="M54,100 Q48,52 100,52 Q152,52 146,100 Q142,74 120,68 Q100,64 80,68 Q58,74 54,100 Z" fill="#20202a"/>
+      <path d="M57,94 Q56,78 65,70 M143,94 Q144,78 135,70" fill="none" stroke="#c9ccd6" stroke-width="4" stroke-linecap="round"/>
+      ${heroFace('<path d="M87,128 Q100,121 113,128 Q100,125 87,128 Z M94,143 Q100,151 106,143 Q100,145 94,143 Z" fill="#2a2228"/>', '#4a2a34', '#3d6b78')}
+    </g>
+    <path d="M74,152 L55,122 Q60,140 86,150 Z M126,152 L145,122 Q140,140 114,150 Z" fill="#b3121b"/>
+    ${arm('armL', -1, '#2a3a85', '#f3cfb0', `<g id="manL" transform="translate(66,189)">${MANDALA}</g>`)}
+    ${arm('armR', 1, '#2a3a85', '#f3cfb0', `<g id="manR" transform="translate(134,189)">${MANDALA}</g>`)}`,
+  update(t, S) {
+    const m = S.m, w = Math.abs(S.wave) * 2;
+    // The cloak floats and ripples, streaming back from the direction of travel.
+    const sw = -clamp(S.svx * 1.4, -18, 18), fl = Math.sin(t / 260) * (2 + 4 * m), L = 218;
+    attr('cape', 'd', `M76,150 Q100,140 124,150 L${138 + sw + fl},${L} Q${119 + sw},${L - 7 + fl} ${100 + sw},${L - 2} Q${81 + sw},${L - 7 - fl} ${62 + sw - fl},${L} Z`);
+    // Hands go out and the spell circles spin up; the sling-ring portal sparks behind.
+    attr('armL', 'transform', `rotate(${55 * m + w},78,156)`);
+    attr('armR', 'transform', `rotate(${-55 * m - w},122,156)`);
+    attr('manL', 'transform', `translate(66,189) rotate(${t * .25}) scale(${m})`);
+    attr('manR', 'transform', `translate(134,189) rotate(${-t * .25}) scale(${m})`);
+    attr('portal', 'opacity', m);
+    attr('portal', 'r', 40 + 34 * m);
+    attr('portal', 'stroke-dashoffset', -t * .05);
+    attr('agamotto', 'opacity', S.sleeping ? .4 : .75 + .25 * Math.sin(t / 400));
+  }
+};
+
+// ---------- Ant-Man: shrinks to ant size and sprints, then grows back ----------
+CHARS.antman = { ...HERO,
+  motion: 'dash', tiltPivot: 200, eyeMove: [2.4, 2],
+  defs: skin('#e8343a', '#a3121a') + grad('suitG', '#e5323a', '#9c1018') + grad('steel', '#f1f4f9', '#9ba7bd'),
+  body: `<g id="sizer">
+    ${legs('#1d1d24', '#c4161f')}${torso('url(#suitG)', '#9ba7bd')}
+    <path d="M72,154 Q78,151 84,155 Q81,178 86,200 Q80,199 75,196 Z M128,154 Q122,151 116,155 Q119,178 114,200 Q120,199 125,196 Z" fill="#1d1d24"/>
+    <path d="M100,150 V186" stroke="#1d1d24" stroke-width="5"/>
+    <circle cx="90" cy="189" r="2.4" fill="#e3e8f0"/><circle cx="110" cy="189" r="2.4" fill="#e3e8f0"/>
+    <g id="head">
+      <path d="M84,62 L72,32 M116,62 L128,32" stroke="#9ba7bd" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="72" cy="32" r="3" fill="#e3e8f0"/><circle cx="128" cy="32" r="3" fill="#e3e8f0"/>
+      ${HEAD}
+      <path d="M100,58 V96" stroke="#1d1d24" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="56" cy="106" r="9" fill="url(#steel)"/><circle cx="144" cy="106" r="9" fill="url(#steel)"/>
+      ${lensFace(`<path d="M70,122 Q100,112 130,122 L126,136 Q100,152 74,136 Z" fill="url(#steel)"/>
+        <path d="M88,128 V139 M94,127 V142 M100,126 V143 M106,127 V142 M112,128 V139" stroke="#6b7385" stroke-width="2" stroke-linecap="round"/>`,
+        'M-10,-6 Q0,-12 10,-5 Q12,6 0,9 Q-12,8 -10,-6 Z', { fill: '#1d1416', stroke: '#9ba7bd', sw: 2.5, mouth: false })}
+    </g>
+    ${arm('armL', -1, '#1d1d24', '#c4161f')}${arm('armR', 1, '#1d1d24', '#c4161f')}
+  </g>`,
+  update(t, S) {
+    const m = S.m, small = m > .5, ph = S.hop * 1.6;
+    if (small !== (this.small ?? false)) { this.small = small; sparkle(100, small ? 196 : 150, ['#ff4b4b', '#7fd4ff', '#fff']); }
+    this.k = (this.k ?? 1) + ((small ? .42 : 1) - (this.k ?? 1)) * .2;
+    attr('sizer', 'transform', `translate(100,224) scale(${this.k}) translate(-100,-224)`);
+    attr('shadow', 'transform', `translate(100,232) scale(${this.k}) translate(-100,-232)`);
+    attr('legL', 'transform', `rotate(${Math.sin(ph) * 50 * m},91,192)`);
+    attr('legR', 'transform', `rotate(${-Math.sin(ph) * 50 * m},109,192)`);
+    attr('armL', 'transform', `rotate(${-Math.sin(ph) * 40 * m + Math.abs(S.wave) * 2},78,156)`);
+    attr('armR', 'transform', `rotate(${-Math.sin(ph) * 40 * m - Math.abs(S.wave) * 2},122,156)`);
+  }
+};
+
 // ---------------------------------------------------------------------------
 // Engine
 // ---------------------------------------------------------------------------
@@ -821,6 +895,21 @@ function smash() {
     particles.push({ el: r, born: now, life: 520, step(a) {
       r.setAttribute('transform', `translate(${100 + vx * a},${224 - vy * a + 70 * a * a}) rotate(${a * 300})`);
       r.setAttribute('opacity', 1 - a * a);
+    } });
+  }
+}
+
+// A burst of sparks flying out from a point (in body coordinates).
+function sparkle(x, y, colors) {
+  const now = performance.now();
+  for (let i = 0; i < 10; i++) {
+    const el = document.createElementNS(SVGNS, 'circle'), a = i / 10 * 2 * Math.PI, d = 26 + Math.random() * 16;
+    for (const [k, v] of [['r', 2.2], ['fill', colors[i % colors.length]], ['filter', 'url(#glow)']]) el.setAttribute(k, v);
+    $('fx').appendChild(el);
+    particles.push({ el, born: now, life: 420, step(p) {
+      el.setAttribute('cx', x + Math.cos(a) * d * p);
+      el.setAttribute('cy', y + Math.sin(a) * d * p);
+      el.setAttribute('opacity', 1 - p);
     } });
   }
 }

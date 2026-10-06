@@ -34,7 +34,7 @@ A tiny desktop companion for macOS. Pick a character, and it watches your cursor
 
 ### Heroes
 
-Twelve superheroes in their own **Heroes** menu: six originals and six fan-art versions of famous heroes. Each one does its signature move while it travels after your cursor.
+Fourteen superheroes in their own **Heroes** menu: six originals and eight fan-art versions of famous heroes. Each one does its signature move while it travels after your cursor.
 
 ![Hero moves](docs/hero-moves.png)
 
@@ -59,8 +59,10 @@ Twelve superheroes in their own **Heroes** menu: six originals and six fan-art v
 | 🦇 | **Batman** | Glides and swoops on a cape that opens into bat wings |
 | 💪 | **Hulk** | Giant leaps that land with a smash |
 | ⭐ | **Captain America** | Throws his shield, which boomerangs back to his hand |
+| 🔮 | **Doctor Strange** | Levitates on his cloak, casting spinning spell circles inside a sparking portal |
+| 🐜 | **Ant-Man** | Shrinks to ant size in a burst of sparks and sprints, then grows back when he stops |
 
-> **Trademark notice:** Spider-Man, Iron Man, Hulk and Captain America are trademarks of Marvel. Superman and Batman are trademarks of DC. The fan-art heroes are unofficial, non-commercial fan art. This project isn't affiliated with or endorsed by Marvel, DC or Disney, and those characters aren't covered by the MIT license. If a rights holder asks, they'll be removed.
+> **Trademark notice:** Spider-Man, Iron Man, Hulk, Captain America, Doctor Strange and Ant-Man are trademarks of Marvel. Superman and Batman are trademarks of DC. The fan-art heroes are unofficial, non-commercial fan art. This project isn't affiliated with or endorsed by Marvel, DC or Disney, and those characters aren't covered by the MIT license. If a rights holder asks, they'll be removed.
 
 All other characters and heroes, Bolt to Aegis, are original designs.
 
@@ -146,7 +148,7 @@ Things it does on its own:
 | Item | What it does |
 |---|---|
 | **Character** | Switch between Bolt, Mochi, Boo, Jelly, Pip and Bao. |
-| **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis, or, below the line, Spider-Man, Iron Man, Superman, Batman, Hulk and Captain America. |
+| **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis, or, below the line, Spider-Man, Iron Man, Superman, Batman, Hulk, Captain America, Doctor Strange and Ant-Man. |
 | **Follow Cursor** | On: it travels after the cursor. Off: it stays where you put it, but still watches the cursor. |
 | **Size** | Tiny, Small (default), Medium or Large. |
 | **Say Hi ♥** | Plays the happy animation. |

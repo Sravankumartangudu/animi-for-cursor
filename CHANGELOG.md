@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3 — 2026-10-06
+
+- Two more fan-art heroes: Doctor Strange (levitates and casts spinning spell circles inside a sparking portal) and Ant-Man (shrinks to ant size with a burst of sparks, sprints, then grows back).
+
 ## 1.2 — 2026-10-06
 
 - Six fan-art heroes in the **Heroes** menu, below the originals, each doing their famous move: Spider-Man (web swing), Iron Man (thruster flight), Superman (fist-first flight), Batman (cape glide, a new motion), Hulk (leap and smash) and Captain America (shield throw). These are unofficial fan art; see the trademark notice in the README.
