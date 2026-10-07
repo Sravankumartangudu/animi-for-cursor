@@ -220,6 +220,7 @@ This can happen if you copy a built `Animi.app` to another Mac. Right-click the 
 |---|---|
 | `animi.html` | All character artwork (SVG) and the shared animation engine |
 | `main.swift` | Transparent floating window, cursor tracking, following, dragging, menu |
+| `NexusBeacon.swift` | Writes a heartbeat to `~/.nexus/heartbeats/` every 30 s so [Nexus](https://github.com/Sravankumartangudu/nexus) shows Animi as running |
 | `build.sh` | Compiles and bundles `Animi.app` |
 | `AppIcon.icns` | The app icon (Bolt watching a cursor) |
 | `gallery.html` | Open in a browser to preview every character side by side |

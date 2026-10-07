@@ -7,7 +7,7 @@ APP=Animi.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos13" main.swift -o "$APP/Contents/MacOS/Animi" -framework Cocoa -framework WebKit
+swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos13" main.swift NexusBeacon.swift -o "$APP/Contents/MacOS/Animi" -framework Cocoa -framework WebKit
 cp animi.html AppIcon.icns "$APP/Contents/Resources/"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -20,7 +20,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key><string>Animi</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.4</string>
+  <key>CFBundleShortVersionString</key><string>1.5</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>

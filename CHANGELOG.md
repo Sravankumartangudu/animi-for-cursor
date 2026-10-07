@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5 — 2026-10-07
+
+- Reports to [Nexus](https://github.com/Sravankumartangudu/nexus): Animi writes a small heartbeat file to
+  `~/.nexus/heartbeats/` every 30 seconds, so Nexus shows it as running.
+
 ## 1.4 — 2026-10-06
 
 - Menu bar icon: click it to open the same menu as right-clicking the character. This helps when the character is hidden behind a window.

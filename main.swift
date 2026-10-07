@@ -93,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NexusBeacon.start(name: "Animi")
         let size = NSSize(width: width, height: width * 1.2)
         let frame = NSRect(origin: savedOrigin(for: size) ?? defaultOrigin(for: size), size: size)
 
