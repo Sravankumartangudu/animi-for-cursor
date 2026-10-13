@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6 — 2026-10-13
+
+- **Lives in Nexus's menu-bar folder.** With Nexus 1.6, Animi's menu also shows in its submenu in Nexus, and picking an item there works the same as from Animi's own menu-bar icon.
+  - Turn on **Keep Agents in Nexus** in Nexus to hide the menu-bar icon. **Show Icon in Menu Bar** in Animi's submenu keeps it.
+  - If Nexus isn't running, the icon always shows.
+
 ## 1.5 — 2026-10-07
 
 - Reports to [Nexus](https://github.com/Sravankumartangudu/nexus): Animi writes a small heartbeat file to

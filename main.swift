@@ -132,6 +132,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             button.toolTip = "Animi"
         }
         statusItem.menu = menu
+        NexusBeacon.attach(statusItem)   // lets the app live in Nexus's menu
         window.orderFrontRegardless()
 
         let t = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
