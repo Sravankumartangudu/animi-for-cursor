@@ -153,10 +153,11 @@ The same menu opens when you right-click the character or click the Animi icon i
 | **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis, or, below the line, Spider-Man, Iron Man, Superman, Batman, Hulk, Captain America, Doctor Strange and Ant-Man. |
 | **Follow Cursor** | On: it travels after the cursor. Off: it stays where you put it, but still watches the cursor. |
 | **Size** | Tiny, Small (default), Medium or Large. |
+| **Appearance** | System (default), Light or Dark for the menus. The character looks the same in every mode. |
 | **Say Hi ♥** | Plays the happy animation. |
 | **Quit Animi** | Closes the app. |
 
-Your character, size, follow setting and position are saved automatically.
+Your character, size, follow setting, appearance and position are saved automatically.
 
 ## Start automatically at login
 

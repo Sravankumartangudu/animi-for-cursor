@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7 — 2026-10-15
+
+- **Appearance setting.** Right-click → **Appearance** → System, Light or Dark. It sets the look of Animi's menus; System follows macOS and is the default. The character looks the same in every mode.
+
 ## 1.6 — 2026-10-13
 
 - **Lives in Nexus's menu-bar folder.** With Nexus 1.6, Animi's menu also shows in its submenu in Nexus, and picking an item there works the same as from Animi's own menu-bar icon.

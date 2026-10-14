@@ -92,6 +92,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         set { defaults.set(newValue, forKey: "character") }
     }
 
+    private var appearance: String {
+        get { defaults.string(forKey: "appearance") ?? "system" }
+        set { defaults.set(newValue, forKey: "appearance") }
+    }
+
+    /// System follows macOS; Light/Dark force the menus. The pet's own window stays pinned to Aqua so it looks the same in every mode.
+    private func applyAppearance() {
+        switch appearance {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp.appearance = nil
+        }
+        window?.appearance = NSAppearance(named: .aqua)
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NexusBeacon.start(name: "Animi")
         let size = NSSize(width: width, height: width * 1.2)
@@ -105,6 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         window.level = .floating
         window.hidesOnDeactivate = false
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        applyAppearance()
 
         let content = NSView(frame: NSRect(origin: .zero, size: size))
         let config = WKWebViewConfiguration()
@@ -246,11 +262,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         followItem.state = follow ? .on : .off
         menu.addItem(followItem)
 
+        let appearanceItem = NSMenuItem(title: "Appearance", action: nil, keyEquivalent: "")
+        let appearanceMenu = NSMenu()
+        for (key, name) in [("system", "System"), ("light", "Light"), ("dark", "Dark")] {
+            let item = NSMenuItem(title: name, action: #selector(setAppearance(_:)), keyEquivalent: "")
+            item.representedObject = key
+            item.target = self
+            item.state = key == appearance ? .on : .off
+            appearanceMenu.addItem(item)
+        }
+        appearanceItem.submenu = appearanceMenu
+        menu.addItem(appearanceItem)
+
         let cheer = NSMenuItem(title: "Say Hi ♥", action: #selector(sayHi), keyEquivalent: "")
         cheer.target = self
         menu.addItem(cheer)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit Animi", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+    }
+
+    @objc private func setAppearance(_ sender: NSMenuItem) {
+        guard let key = sender.representedObject as? String else { return }
+        appearance = key
+        applyAppearance()
+        buildMenu()
     }
 
     @objc private func sayHi() { js("cheer()") }
