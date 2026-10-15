@@ -128,9 +128,9 @@ You can also double-click **Animi** in your Applications folder or find it with 
 |---|---|
 | Make it follow you | Just move the mouse. It travels toward the cursor and stops a little short so it never covers what you're clicking. |
 | Move it somewhere | Click and drag the character. |
-| Keep it in one place | Right-click → turn off **Follow Cursor**, then drag it where you want. It stays there, even after a restart. |
-| Change the character | Right-click → **Character** or **Heroes** → pick one. |
-| Make it smaller or bigger | Right-click → **Size** → Tiny / Small / Medium / Large. |
+| Keep it in one place | Right-click → **Settings** → turn off **Follow Cursor**, then drag it where you want. It stays there, even after a restart. |
+| Change the character | Right-click → **Character** or **Heroes** → pick one (each has a thumbnail). |
+| Make it smaller or bigger | Right-click → **Settings** → **Size** → Tiny / Small / Medium / Large. |
 | Get a reaction | **Click** = squish and blink. **Double-click** = hearts and a happy hop. |
 | Quit | Right-click (or click the menu bar icon) → **Quit Animi**. |
 
@@ -149,11 +149,11 @@ The same menu opens when you right-click the character or click the Animi icon i
 
 | Item | What it does |
 |---|---|
-| **Character** | Switch between Bolt, Mochi, Boo, Jelly, Pip and Bao. |
+| **Character** | Switch between Bolt, Mochi, Boo, Jelly, Pip and Bao. Each has a small picture next to its name. |
 | **Heroes** | Switch between Tether, Cirrus, Volta, Gust, Rumble and Aegis, or, below the line, Spider-Man, Iron Man, Superman, Batman, Hulk, Captain America, Doctor Strange and Ant-Man. |
-| **Follow Cursor** | On: it travels after the cursor. Off: it stays where you put it, but still watches the cursor. |
-| **Size** | Tiny, Small (default), Medium or Large. |
-| **Appearance** | System (default), Light or Dark for the menus. The character looks the same in every mode. |
+| **Settings → Follow Cursor** | On: it travels after the cursor. Off: it stays where you put it, but still watches the cursor. |
+| **Settings → Size** | Tiny, Small (default), Medium or Large. |
+| **Settings → Appearance** | System (default), Light or Dark for the menus. The character looks the same in every mode. |
 | **Say Hi ♥** | Plays the happy animation. |
 | **Quit Animi** | Closes the app. |
 
@@ -207,7 +207,7 @@ open /Applications/Animi.app
 ```
 
 **It keeps coming back when I try to move it**
-That's **Follow Cursor**. Right-click → turn **Follow Cursor** off, then drag it.
+That's **Follow Cursor**. Right-click → **Settings** → turn **Follow Cursor** off, then drag it.
 
 **How do I quit it if I can't right-click it?**
 Run `pkill -x Animi` in Terminal.

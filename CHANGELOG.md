@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8 — 2026-10-15
+
+- **Thumbnails in the Character and Heroes menus.** Every character now has a small picture next to its name, drawn from the same artwork the pet uses. They appear a few seconds after launch.
+- **Tidier menu.** Follow Cursor, Size and Appearance now live under one **Settings** submenu with Behavior and App headings. Your saved choices are unchanged.
+
 ## 1.7 — 2026-10-15
 
 - **Appearance setting.** Right-click → **Appearance** → System, Light or Dark. It sets the look of Animi's menus; System follows macOS and is the default. The character looks the same in every mode.

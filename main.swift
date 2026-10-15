@@ -139,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loadCharacter()
         menu.delegate = self
         buildMenu()
+        startThumbnails()
         // Menu bar icon that opens the same menu as right-clicking the character.
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
@@ -226,6 +227,78 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) { isMenuOpen = true }
     func menuDidClose(_ menu: NSMenu) { isMenuOpen = false }
 
+    // MARK: Character thumbnails
+
+    /// Small pictures of each character for the Character / Heroes menus, rendered once from the
+    /// same animi.html the pet uses (a hidden web view that shows each character in turn).
+    private var thumbs: [String: NSImage] = [:]
+    private var thumbWeb: WKWebView?
+    private var thumbWindow: NSWindow?
+
+    private func startThumbnails() {
+        guard thumbs.isEmpty, thumbWeb == nil, let html = animiHTML() else { return }
+        let cfg = WKWebViewConfiguration()
+        cfg.userContentController.addUserScript(WKUserScript(
+            source: "window.initialChar = 'bot';", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        let w = WKWebView(frame: NSRect(x: 0, y: 0, width: 150, height: 180), configuration: cfg)
+        w.setValue(false, forKey: "drawsBackground")
+        // Parked far off-screen; it only exists to be photographed.
+        let win = NSWindow(contentRect: NSRect(x: -4000, y: -4000, width: 150, height: 180),
+                           styleMask: [.borderless], backing: .buffered, defer: false)
+        win.isOpaque = false
+        win.backgroundColor = .clear
+        win.appearance = NSAppearance(named: .aqua)
+        win.contentView = w
+        win.orderBack(nil)
+        thumbWeb = w
+        thumbWindow = win
+        w.loadHTMLString(html, baseURL: nil)
+        let keys = (characters + heroes + fanHeroes).map { $0.key }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in self?.snapshot(keys, 0) }
+    }
+
+    private func snapshot(_ keys: [String], _ i: Int) {
+        guard let w = thumbWeb else { return }
+        guard i < keys.count else {
+            thumbWeb = nil
+            thumbWindow = nil
+            buildMenu()
+            return
+        }
+        w.evaluateJavaScript("setCharacter('\(keys[i])')") { [weak self] _, _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                let cfg = WKSnapshotConfiguration()
+                cfg.snapshotWidth = 72
+                w.takeSnapshot(with: cfg) { img, _ in
+                    if let img {
+                        img.size = NSSize(width: 20, height: 24)
+                        self?.thumbs[keys[i]] = img
+                    }
+                    self?.snapshot(keys, i + 1)
+                }
+            }
+        }
+    }
+
+    private func animiHTML() -> String? {
+        let exeDir = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath().deletingLastPathComponent()
+        let candidates = [Bundle.main.url(forResource: "animi", withExtension: "html"),
+                          exeDir.appendingPathComponent("animi.html")]
+        return candidates.compactMap { $0 }.first(where: { FileManager.default.fileExists(atPath: $0.path) })
+            .flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+    }
+
+    private func sectionHeader(_ title: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title.uppercased(), action: nil, keyEquivalent: "")
+        item.attributedTitle = NSAttributedString(string: title.uppercased(), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
+            .foregroundColor: NSColor.secondaryLabelColor,
+            .kern: 0.8,
+        ])
+        item.isEnabled = false
+        return item
+    }
+
     private func buildMenu() {
         menu.removeAllItems()
         for (title, sections) in [("Character", [characters]), ("Heroes", [heroes, fanHeroes])] {
@@ -238,12 +311,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     item.representedObject = c.key
                     item.target = self
                     item.state = c.key == character ? .on : .off
+                    item.image = thumbs[c.key]
                     groupMenu.addItem(item)
                 }
             }
             groupItem.submenu = groupMenu
             menu.addItem(groupItem)
         }
+        menu.addItem(.separator())
+
+        // Preferences are grouped under one Settings submenu.
+        let settingsItem = NSMenuItem(title: "Settings", action: nil, keyEquivalent: "")
+        let settingsMenu = NSMenu()
+        settingsMenu.addItem(sectionHeader("Behavior"))
+
+        let followItem = NSMenuItem(title: "Follow Cursor", action: #selector(toggleFollow), keyEquivalent: "")
+        followItem.target = self
+        followItem.state = follow ? .on : .off
+        settingsMenu.addItem(followItem)
 
         let sizeItem = NSMenuItem(title: "Size", action: nil, keyEquivalent: "")
         let sizeMenu = NSMenu()
@@ -255,14 +340,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             sizeMenu.addItem(item)
         }
         sizeItem.submenu = sizeMenu
-        menu.addItem(sizeItem)
+        settingsMenu.addItem(sizeItem)
 
-        let followItem = NSMenuItem(title: "Follow Cursor", action: #selector(toggleFollow), keyEquivalent: "")
-        followItem.target = self
-        followItem.state = follow ? .on : .off
-        menu.addItem(followItem)
-
-        let appearanceItem = NSMenuItem(title: "Appearance", action: nil, keyEquivalent: "")
+        settingsMenu.addItem(.separator())
+        settingsMenu.addItem(sectionHeader("App"))
+        let appearanceItem = NSMenuItem(title: "Appearance (menus)", action: nil, keyEquivalent: "")
         let appearanceMenu = NSMenu()
         for (key, name) in [("system", "System"), ("light", "Light"), ("dark", "Dark")] {
             let item = NSMenuItem(title: name, action: #selector(setAppearance(_:)), keyEquivalent: "")
@@ -272,7 +354,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             appearanceMenu.addItem(item)
         }
         appearanceItem.submenu = appearanceMenu
-        menu.addItem(appearanceItem)
+        settingsMenu.addItem(appearanceItem)
+        settingsItem.submenu = settingsMenu
+        menu.addItem(settingsItem)
 
         let cheer = NSMenuItem(title: "Say Hi ♥", action: #selector(sayHi), keyEquivalent: "")
         cheer.target = self
