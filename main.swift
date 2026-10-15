@@ -58,6 +58,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var lastSent = ""
     private var velocity = CGVector.zero
 
+    /// A one-colour robot head (Bolt) for the menu bar. As a template image, macOS tints it for light
+    /// and dark menu bars, like every other menu-bar icon.
+    static func menuBarIcon() -> NSImage {
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+            NSColor.black.set()
+            let head = NSBezierPath(roundedRect: NSRect(x: 2.75, y: 2.25, width: 12.5, height: 9.5), xRadius: 3.25, yRadius: 3.25)
+            head.lineWidth = 1.5
+            head.stroke()
+            for x in [6.5, 11.5] as [CGFloat] {   // eyes
+                NSBezierPath(ovalIn: NSRect(x: x - 1.3, y: 6, width: 2.6, height: 2.6)).fill()
+            }
+            NSBezierPath(rect: NSRect(x: 0.75, y: 5.25, width: 1.5, height: 3.5)).fill()      // ears
+            NSBezierPath(rect: NSRect(x: 15.75, y: 5.25, width: 1.5, height: 3.5)).fill()
+            NSBezierPath(rect: NSRect(x: 8.4, y: 11.75, width: 1.2, height: 3)).fill()        // antenna
+            NSBezierPath(ovalIn: NSRect(x: 7.6, y: 14.3, width: 2.8, height: 2.8)).fill()
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+
     private var follow: Bool {
         get { defaults.object(forKey: "follow") as? Bool ?? true }
         set { defaults.set(newValue, forKey: "follow") }
@@ -143,9 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Menu bar icon that opens the same menu as right-clicking the character.
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            let icon = Bundle.main.image(forResource: "AppIcon") ?? NSImage(systemSymbolName: "face.smiling", accessibilityDescription: nil)
-            icon?.size = NSSize(width: 18, height: 18)
-            button.image = icon
+            button.image = Self.menuBarIcon()
             button.toolTip = "Animi"
         }
         statusItem.menu = menu

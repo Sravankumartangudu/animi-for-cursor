@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9 — 2026-10-15
+
+- **Menu bar icon fits in.** The menu bar now shows a plain outline of Bolt's head instead of the shrunken colour app icon. Like the other menu-bar icons, macOS shows it black on a light menu bar and white on a dark one.
+
 ## 1.8 — 2026-10-15
 
 - **Thumbnails in the Character and Heroes menus.** Every character now has a small picture next to its name, drawn from the same artwork the pet uses. They appear a few seconds after launch.
